@@ -1,4 +1,5 @@
-git "file:///Users/kennethstack/documents/loopkit" "delaymodel"
+github "LoopKit/LoopKit" == 1.5.3
+github "LoopKit/xDripG5" ~> 0.8.1
 github "i-schuetz/SwiftCharts" == 0.6.1
 github "mddub/dexcom-share-client-swift" == 0.4.1
 github "mddub/G4ShareSpy" == 0.3.3

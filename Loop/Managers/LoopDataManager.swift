@@ -427,6 +427,20 @@ final class LoopDataManager {
                 try self.update()
 
                 if self.settings.dosingEnabled {
+                   
+                    
+                    //  print(self.settings.glucoseTargetRangeSchedule)
+                    //print(self.settings.glucoseTargetRangeSchedule?.rawValue)
+                  //  self.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: <#T##HKUnit#>, dailyItems: <#T##[RepeatingScheduleValue<DoubleRange>]#>, overrideRanges: <#T##[GlucoseRangeSchedule.Override.Context : DoubleRange]#>)
+                   // self.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(rawValue:["items": [["startTime": 0.0, "value": [150.0, 151.0]]], "timeZone": -18000, "overrideRanges": [:], "unit": "mg/dL"])
+                    //self.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: <#T##GlucoseRangeSchedule.RawValue#>)
+                    //self.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(rawValue: ["200":"201"])
+                    //self.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: self.unit, dailyItems: self.scheduleItems, timeZone: self.timeZone, overrideRanges: self.overrideRanges, override: self.settings.glucoseTargetRangeSchedule?.override)
+//                    self.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: self.unit, dailyItems: self.scheduleItems, timeZone: self.timeZone, overrideRanges: self.overrideRanges, override: self.settings.glucoseTargetRangeSchedule?.override)
+//                        AnalyticsManager.shared.didChangeGlucoseTargetRangeSchedule()
+                    
+                  //  self.settings.glucoseTargetRangeSchedule?.setOverride(.preMeal, until: Date(timeIntervalSinceNow: .hours(6)))
+                    
                     self.setRecommendedTempBasal { (error) -> Void in
                         self.lastLoopError = error
 

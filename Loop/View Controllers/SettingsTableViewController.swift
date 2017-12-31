@@ -823,7 +823,42 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 case .glucoseTargetRange:
                     if let controller = controller as? GlucoseRangeScheduleTableViewController {
                         dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone, overrideRanges: controller.overrideRanges, override: dataManager.loopManager.settings.glucoseTargetRangeSchedule?.override)
-                        AnalyticsManager.shared.didChangeGlucoseTargetRangeSchedule()
+//                        print(dataManager.loopManager.settings.glucoseTargetRangeSchedule)
+//                        print(dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue)
+//                        print(dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges)
+//                        print(dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges.index(forKey: .remoteTempTarget))
+                       //dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges.index(forKey: .remoteTempTarget) = [161,162] as LoopKit.DoubleRange
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule("overrideRanges": ["remoteTempTarget":DoubleRange[minValue:167,maxValue:168])
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(unit: HKUnit.milligramsPerDeciliter(), dailyItems: [RepeatingScheduleValue(startTime: TimeInterval(0), value: DoubleRange(minValue: 90, maxValue: 91))], overrideRanges: [.remoteTempTarget:DoubleRange(minValue: 168,maxValue: 169)])!
+//                        dataManager.loopManager.settings.glucoseTargetRangeSchedule?.override =
+//                        print(controller.overrideRanges.index(forKey: .remoteTempTarget))
+//                        controller.overrideRanges.index(forKey: .remoteTempTarget) = DoubleRange(minValue:111, maxValue:111)
+                        
+                        //var raworig = dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue
+                        var raw = (dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                        //print(raworig!["overrideRanges"])
+                       // raworig!["overrideRanges"] = ["remoteTempTarget": [78: 79], "preMeal": [80.0, 81.0]]
+                       // raworig!["overrideRanges"]!["remoteTempTarget"] = [80,81] as [Double]
+                       // raworig!["overrideRanges"] = ["remoteTempTarget": [78, 79], "preMeal": [80.0, 81.0]] as [String : [Double]]
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(rawValue:raworig!)
+                        
+                        //                        print(raw["overrideRanges"])
+                        var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                        print(rawranges["remoteTempTarget"])
+                        rawranges["remoteTempTarget"] = [51,52] as [Double]
+                        raw["overrideRanges"] = rawranges as! [String : [Double]]
+                        print(raw)
+                        print(raw as GlucoseRangeSchedule.RawValue)
+                        dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+                        //GlucoseRangeSchedule(rawValue: rawValue)
+                        //print(raw!["overrideRanges"])
+                        //print(raw!["overrideRanges"]!["remoteTempTarget"])
+                        //print(raw!["overrideRanges"]!["remoteTempTargets"])
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges = GlucoseRangeSchedule.RawValue(["remoteTempTarget": [168.0, 169.0], "preMeal": [80.0, 81.0]])
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(unit:controller.unit, dailyItems: controller.scheduleItems, overrideRanges: [.remoteTempTarget:DoubleRange(minValue: 168,maxValue: 169)])!
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(overrideRanges: [.remoteTempTarget:DoubleRange(minValue: 168,maxValue: 169)])!
+                        //print(dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges.index(forKey: GlucoseRangeSchedule.Override.Context(rawValue: "remoteTempTarget")!))
+                        //dataManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges["remoteTempTarget"] =                         AnalyticsManager.shared.didChangeGlucoseTargetRangeSchedule()
                     }
                 case let row:
                     if let controller = controller as? DailyQuantityScheduleTableViewController {

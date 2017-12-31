@@ -358,7 +358,10 @@ final class StatusTableViewController: ChartsTableViewController {
 
         workoutMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)
         preMealMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)
-
+       //remoteTempTargetMode=deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget)
+        
+        
+        
         reloadGroup.notify(queue: .main) {
             self.tableView.beginUpdates()
             if let hudView = self.hudView {
@@ -565,7 +568,7 @@ final class StatusTableViewController: ChartsTableViewController {
     }
 
     // MARK: - Toolbar data
-
+    
     private var preMealMode: Bool? = nil {
         didSet {
             guard oldValue != preMealMode else {
@@ -593,6 +596,21 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
+    
+//    private var remoteTempTargetMode: Bool? = nil {
+//        didSet {
+//            guard oldValue != remoteTempTargetMode else {
+//                return
+//            }
+//
+//            if let remoteTempTargetMode = remoteTempTargetMode {
+//            }
+//                toolbarItems![2] = createPreMealButtonItem(selected: preMealMode)
+//            } else {
+//                toolbarItems![2].isEnabled = false
+//            }
+//        }
+//    }
 
     // MARK: - Table view data source
 

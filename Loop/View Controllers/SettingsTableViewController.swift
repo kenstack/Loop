@@ -808,6 +808,179 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
         switchCell.switch?.setOn(false, animated: true)
     }
 
+    // MARK: - setremotetemp
+    
+    struct NStempBasal : Codable {
+        let created_at : String
+        let duration : Int
+        let targetBottom : Double?
+        let targetTop : Double?
+    }
+
+    
+    func setNStemp () {
+        // data from URL modified http://mrgott.com/swift-programing/33-rest-api-in-swift-4-using-urlsession-and-jsondecode
+        
+        var nssite : String =  "https://t1daarsloop.herokuapp.com"
+        let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target"
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate,
+                                   .withTime,
+                                   .withDashSeparatorInDate,
+                                   .withColonSeparatorInTime]
+        
+        guard let url = URL(string: urlString) else {
+            print ("URL Parsing Error")
+            return
+        }
+        
+        let session = URLSession.shared
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringCacheData
+        
+        
+        
+        
+        session.dataTask(with: request as URLRequest) { (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else { return }
+            
+                do {
+                    let temptargets = try JSONDecoder().decode([NStempBasal].self, from: data)
+                    var cdates = [Date]()
+                    //find the index of the most recent tempbasal sort by date
+                    for item in temptargets {
+                        cdates.append(formatter.date(from: (item.created_at as? String)!)!)
+                    }
+                    let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
+                    //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
+                    if last.duration as? Int != 0 {
+                        guard last.targetBottom as? Double != nil else {return}
+                        guard last.targetTop as? Double != nil else {return}
+                    }
+                    // we have a valid temp basal so now set it
+                    //print(last)
+                    var raw = (self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                    //                        print(raw["overrideRanges"])
+                    var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                    rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double] as [Double]
+                    raw["overrideRanges"] = rawranges as! [String : [Double]]
+                    self.dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+                } catch let jsonError {
+                    print(jsonError)
+                    return
+                }
+            
+            //Implement JSON decoding and parsing
+
+            }.resume()
+    }
+
+    
+    
+    
+    
+    
+    public func remoteTempTarget(url:String)  {
+        
+        let urlf = url + "/api/v1/treatments.json?find[eventType]=Temporary%20Target"
+        var request = URLRequest(url: URL(string: urlf)!)
+        
+        
+        request.httpMethod = "GET"
+        request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringCacheData
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {                                                 // check for fundamental networking error
+                print("error=\(String(describing: error))")
+                return
+            }
+            
+            if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {           // check for http errors
+                print("statusCode should be 200, but is \(httpStatus.statusCode)")
+                print("response = \(String(describing: response))")
+                return
+            }
+            do {
+//                let temptargets = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [[String:Any]]
+//                let temptargetssorted = temptargets.sorted{
+//                    ($1["created_at"] as! String).localizedCaseInsensitiveCompare($0["created_at"] as! String) == ComparisonResult.orderedAscending
+//                }
+//                let last = temptargetssorted[0] as! Dictionary<String, Any>
+                let temptargets = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [[String:Any]]
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withFullDate,
+                                           .withTime,
+                                           .withDashSeparatorInDate,
+                                           .withColonSeparatorInTime]
+                var cdates = [Date]()
+                for item in temptargets {
+                    cdates.append(formatter.date(from: (item["created_at"] as? String)!)!)
+                }
+               let last = temptargets[(cdates.index(of:cdates.min()!) as! Int)]
+                
+                
+                //let temptargetssorted = temptargets.sorted { $0["created_at"].String < $1["created_at"].String }
+//                let temptargetssorted = temptargets.sorted{
+//                    ($1["created_at"] as! String).localizedCaseInsensitiveCompare($0["created_at"] as! String) == ComparisonResult.orderedAscending
+//                }
+               // let last = temptargetssorted[0]
+                
+                
+                
+                // check they are valid entries
+                guard last["duration"] as? Int != nil else {return}
+                //duration = last["duration"] as! Int
+                ///////// addback guard last["created_at"] as? NSDate != nil else {return}
+                //created_at = last["created_at"] as! NSDate
+                //if duration is 0 we dont care about minmax levels, if not we do
+                var min : Double
+                var max : Double
+                min = -1
+                max = -1
+                //min = (last["targetBottom"] as? Double)!
+                if last["duration"] as? Int != 0 {
+                    guard last["targetBottom"] as! Double != nil else {return}
+                     min = last["targetBottom"] as! Double
+                    
+                    guard last["targetTop"] as? Double != nil else {return}
+                     max = last["targetTop"] as! Double
+                }
+                print(min)
+                print(max)
+                //
+                //            do the set here
+                var raw = (self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                
+                //                        print(raw["overrideRanges"])
+                var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                print(rawranges["remoteTempTarget"])
+                
+                let bottom : Double = last["targetBottom"] as! Double
+                let top : Double = last["targetTop"] as! Double
+                
+                rawranges["remoteTempTarget"] = [bottom, top] as [Double]
+                raw["overrideRanges"] = rawranges as! [String : [Double]]
+                self.dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+                //
+                //print(last["created_at"] as! NSDate," ",last["duration"] as! Int," ",last["minValue"] as! Double ," ", last["maxValue"] as! Double)
+                
+            } catch let error as NSError {
+                print("JSON decoding error ",error)
+                return
+            }
+            //let responseString = String(data: data, encoding: .utf8)
+            // print("responseString = \(String(describing: responseString))")
+            
+        }
+        task.resume()
+    }
+    
+    
     // MARK: - DailyValueScheduleTableViewControllerDelegate
 
     func dailyValueScheduleTableViewControllerWillFinishUpdating(_ controller: DailyValueScheduleTableViewController) {
@@ -834,8 +1007,12 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
 //                        print(controller.overrideRanges.index(forKey: .remoteTempTarget))
 //                        controller.overrideRanges.index(forKey: .remoteTempTarget) = DoubleRange(minValue:111, maxValue:111)
                         
+                        //var url : String =  "https://t1daarsloop.herokuapp.com"
+                        
+                        setNStemp()
+                        
                         //var raworig = dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue
-                        var raw = (dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                        //var raw = (dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
                         //print(raworig!["overrideRanges"])
                        // raworig!["overrideRanges"] = ["remoteTempTarget": [78: 79], "preMeal": [80.0, 81.0]]
                        // raworig!["overrideRanges"]!["remoteTempTarget"] = [80,81] as [Double]
@@ -843,13 +1020,13 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                         //dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(rawValue:raworig!)
                         
                         //                        print(raw["overrideRanges"])
-                        var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
-                        print(rawranges["remoteTempTarget"])
-                        rawranges["remoteTempTarget"] = [51,52] as [Double]
-                        raw["overrideRanges"] = rawranges as! [String : [Double]]
-                        print(raw)
-                        print(raw as GlucoseRangeSchedule.RawValue)
-                        dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+//                        var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+//                        print(rawranges["remoteTempTarget"])
+//                        rawranges["remoteTempTarget"] = [51,52] as [Double]
+//                        raw["overrideRanges"] = rawranges as! [String : [Double]]
+//                        print(raw)
+//                        print(raw as GlucoseRangeSchedule.RawValue)
+//                        dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
                         //GlucoseRangeSchedule(rawValue: rawValue)
                         //print(raw!["overrideRanges"])
                         //print(raw!["overrideRanges"]!["remoteTempTarget"])

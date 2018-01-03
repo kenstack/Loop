@@ -12,6 +12,7 @@ import GlucoseKit
 import HealthKit
 import InsulinKit
 import LoopKit
+import NightscoutUploadKit
 
 
 final class LoopDataManager {
@@ -465,10 +466,102 @@ final class LoopDataManager {
     ///     - LoopError.glucoseTooOld
     ///     - LoopError.missingDataError
     ///     - LoopError.pumpDataTooOld
+    
+    //    //////////////
+    
+    ////////////////////
+    struct NStempBasal : Codable {
+        let created_at : String
+        let duration : Int
+        let targetBottom : Double?
+        let targetTop : Double?
+    }
+    
+    
+    func setNStemp () {
+        // data from URL modified http://mrgott.com/swift-programing/33-rest-api-in-swift-4-using-urlsession-and-jsondecode
+        
+        
+        var nssite : String =  "https://t1daarsloop.herokuapp.com"
+        let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target"
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate,
+                                   .withTime,
+                                   .withDashSeparatorInDate,
+                                   .withColonSeparatorInTime]
+        
+        guard let url = URL(string: urlString) else {
+            print ("URL Parsing Error")
+            return
+        }
+        
+        let session = URLSession.shared
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringCacheData
+        
+        
+        
+        
+        session.dataTask(with: request as URLRequest) { (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else { return }
+            
+            do {
+                let temptargets = try JSONDecoder().decode([NStempBasal].self, from: data)
+                var cdates = [Date]()
+                //find the index of the most recent tempbasal sort by date
+                for item in temptargets {
+                    cdates.append(formatter.date(from: (item.created_at as? String)!)!)
+                }
+                let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
+                //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
+                if last.duration as? Int != 0 {
+                    guard last.targetBottom as? Double != nil else {return}
+                    guard last.targetTop as? Double != nil else {return}
+                }
+                // we have a valid temp basal - check to see if we need to set it
+                //
+               
+                var raw = (self.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                //                        print(raw["overrideRanges"])
+                var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double] as [Double]
+                raw["overrideRanges"] = rawranges as! [String : [Double]]
+                self.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+            } catch let jsonError {
+                print(jsonError)
+                return
+            }
+            
+            //Implement JSON decoding and parsing
+            
+            }.resume()
+    }
+    
+    
+    
+    
+    //////////////////
+    
+    
+    ///////////////////
+    
+
     fileprivate func update() throws {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
         let updateGroup = DispatchGroup()
 
+        ///add set temp from ns - check tha this is a reasonable location
+        
+        setNStemp()
+        
+        
+        
         // Fetch glucose effects as far back as we want to make retroactive analysis
         var latestGlucoseDate: Date?
         updateGroup.enter()

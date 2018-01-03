@@ -358,7 +358,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
         workoutMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)
         preMealMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)
-       //remoteTempTargetMode=deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget)
+       remoteTempTargetMode=deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget)
         
         
         
@@ -597,20 +597,20 @@ final class StatusTableViewController: ChartsTableViewController {
         }
     }
     
-//    private var remoteTempTargetMode: Bool? = nil {
-//        didSet {
-//            guard oldValue != remoteTempTargetMode else {
-//                return
-//            }
-//
+    private var remoteTempTargetMode: Bool? = nil {
+        didSet {
+            guard oldValue != remoteTempTargetMode else {
+                return
+            }
+
 //            if let remoteTempTargetMode = remoteTempTargetMode {
 //            }
 //                toolbarItems![2] = createPreMealButtonItem(selected: preMealMode)
 //            } else {
 //                toolbarItems![2].isEnabled = false
 //            }
-//        }
-//    }
+        }
+    }
 
     // MARK: - Table view data source
 

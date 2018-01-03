@@ -12,6 +12,7 @@ import InsulinKit
 import LoopKit
 import RileyLinkKit
 import MinimedKit
+import NightscoutUploadKit
 
 private let ConfigCellIdentifier = "ConfigTableViewCell"
 
@@ -820,8 +821,9 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
     
     func setNStemp () {
         // data from URL modified http://mrgott.com/swift-programing/33-rest-api-in-swift-4-using-urlsession-and-jsondecode
-        
-        var nssite : String =  "https://t1daarsloop.herokuapp.com"
+        let nightscoutService = dataManager.remoteDataManager.nightscoutService
+        guard let nssite = nightscoutService.siteURL?.absoluteString as? String else {return}
+        //var nssite : String =  "https://t1daarsloop.herokuapp.com"
         let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target"
         
         let formatter = ISO8601DateFormatter()
@@ -858,19 +860,37 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                         cdates.append(formatter.date(from: (item.created_at as? String)!)!)
                     }
                     let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
+                    //logEvent("Last "+last, outOfSession: true)
+                    
+                    
                     //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
                     if last.duration as? Int != 0 {
                         guard last.targetBottom as? Double != nil else {return}
                         guard last.targetTop as? Double != nil else {return}
                     }
                     // we have a valid temp basal so now set it
-                    //print(last)
+                    //user set modes always have precedence - FIX THIS
+                   // if  == true || self.workout == true {return}
+                    //cancel any prior remoteTemp if last duration = 0
+                    if last.duration == 0 {
+                        self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                        return
+                    }
+                    //check to see if last non zero duration temp is still active
+                    let time = Date()
+                    let endTemp = cdates.max()! + TimeInterval(last.duration*60)
+                    if time >= endTemp {
+                        self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                        return
+                    }
+                    // we have a valid temp set it
                     var raw = (self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
-                    //                        print(raw["overrideRanges"])
                     var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
                     rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double] as [Double]
                     raw["overrideRanges"] = rawranges as! [String : [Double]]
                     self.dataManager.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+                    self.dataManager.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until: endTemp)
+                    
                 } catch let jsonError {
                     print(jsonError)
                     return

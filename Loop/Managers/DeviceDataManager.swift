@@ -165,7 +165,7 @@ final class DeviceDataManager {
         updateTimerTickPreference()
 
         // How long we should wait before we re-tune the RileyLink
-        let tuneTolerance = TimeInterval(minutes: 14)
+        let tuneTolerance = TimeInterval(minutes: 9)
 
         if device.lastTuned == nil || device.lastTuned!.timeIntervalSinceNow <= -tuneTolerance {
             device.tunePump { (result) in

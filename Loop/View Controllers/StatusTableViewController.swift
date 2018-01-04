@@ -594,7 +594,20 @@ final class StatusTableViewController: ChartsTableViewController {
             }
         }
     }
-
+    
+    private var remoteTempTargetMode: Bool? = nil {
+        didSet {
+            guard oldValue != remoteTempTargetMode else {
+                return
+            }
+            
+//            if let workoutMode = workoutMode {
+//                toolbarItems![6] = createWorkoutButtonItem(selected: workoutMode)
+//            } else {
+//                toolbarItems![6].isEnabled = false
+//            }
+        }
+    }
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {

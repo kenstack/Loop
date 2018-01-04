@@ -275,10 +275,18 @@ final class DeviceDataManager {
         loopManager.addReservoirValue(units, at: date) { (result) in
             switch result {
             case .failure(let error):
+                /////////
+                //run even if no pump data in case someone boluses
+                self.setNStemp()
+                /////////
                 self.setLastError(error: error)
                 self.logger.addError(error, fromSource: "DoseStore")
             case .success(let (newValue, lastValue, areStoredValuesContinuous)):
                 // Run a loop as long as we have fresh, reliable pump data.
+                ////////
+                //putting set NSTemp here for now but need to find the right place
+                self.setNStemp()
+                ///////
                 if self.preferredInsulinDataSource == .pumpHistory || !areStoredValuesContinuous {
                     self.fetchPumpHistory { (error) in
                         if let error = error {
@@ -610,12 +618,105 @@ final class DeviceDataManager {
     // MARK: - Status Extension
 
     fileprivate var statusExtensionManager: StatusExtensionDataManager!
+    
+    //////////////////////////////////////////
+    // MARK: - Set Temp Targets From NS
+    
+    struct NStempBasal : Codable {
+        let created_at : String
+        let duration : Int
+        let targetBottom : Double?
+        let targetTop : Double?
+    }
+    
+    
+    func setNStemp () {
+        // data from URL modified http://mrgott.com/swift-programing/33-rest-api-in-swift-4-using-urlsession-and-jsondecode
+        //look at users nightscout treatments collection and implement tempoary BG targets using an override
+        let glucoseTargetRangeSchedule = self.loopManager.settings.glucoseTargetRangeSchedule
+        //user set overrides always have precedence
+        if glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout) == true || (glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal))!  {return}
+        
+        let nightscoutService = remoteDataManager.nightscoutService
+        guard let nssite = nightscoutService.siteURL?.absoluteString  else {return}
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate,
+                                   .withTime,
+                                   .withDashSeparatorInDate,
+                                   .withColonSeparatorInTime]
+        let treatmentWindow : Int = 24 //how far back to look for valid treatments in hours
+        let lasteventDate : Date = Date() - TimeInterval(treatmentWindow*3600)
+        let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target&find[created_at][$gte]="+formatter.string(from: lasteventDate)
+        guard let url = URL(string: urlString) else {
+            print ("URL Parsing Error")
+            return
+        }
+        let session = URLSession.shared
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringCacheData
+        session.dataTask(with: request as URLRequest) { (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else { return }
+            
+            do {
+                let temptargets = try JSONDecoder().decode([NStempBasal].self, from: data)
+                //check to see if we found some recent temp targets
+                if temptargets.count == 0 {return}
+                //find the index of the most recent tempbasal sort by date
+                var cdates = [Date]()
+                for item in temptargets {
+                    cdates.append(formatter.date(from: (item.created_at as String))!)
+                }
+                let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
+                //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
+                if last.duration != 0 {
+                    guard last.targetBottom as? Double != nil else {return}
+                    guard last.targetTop as? Double != nil else {return}
+                }
+                //cancel any prior remoteTemp if last duration = 0
+                if last.duration == 0 {
+                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                    return
+                }
+                // if temp still on set it
+                let endTemp = cdates.max()! + TimeInterval(last.duration*60)
+                let curange = glucoseTargetRangeSchedule?.overrideRanges
+                
+                if Date() < endTemp {
+                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride()
+                    //there is no method to programatically set the ranges as far as I can tell wihtout editing via raw values
+                    var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                    var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                    rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double] as [Double]
+                    raw["overrideRanges"] = rawranges as! [String : [Double]]
+                    self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
+                    let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endTemp)
+                }
+            } catch let jsonError {
+                print(jsonError)
+                return
+            }
+            }.resume()
+    }
+    
+    //////////////////////////
+    
+    
+    
 
     // MARK: - Initialization
+    
 
     private(set) var loopManager: LoopDataManager!
 
     init() {
+        
+       
+        
         let pumpID = UserDefaults.standard.pumpID
 
         var idleListeningEnabled = true
@@ -672,7 +773,9 @@ final class DeviceDataManager {
         }
 
         setupCGM()
+
     }
+
 }
 
 

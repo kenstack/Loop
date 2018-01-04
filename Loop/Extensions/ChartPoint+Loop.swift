@@ -38,6 +38,7 @@ extension ChartPoint {
         return ChartPoint.pointsForDatedRangeOverrideDuration(
             DatedRangeContext(startDate: override.start, endDate: override.end ?? .distantFuture, minValue: range.minValue, maxValue: range.maxValue),
             xAxisValues: xAxisValues)
+
     }
 
     static func pointsForGlucoseRangeScheduleOverride(_ override: GlucoseRangeSchedule.Override, unit: HKUnit, xAxisValues: [ChartAxisValue]) -> [ChartPoint] {
@@ -46,6 +47,7 @@ extension ChartPoint {
         return ChartPoint.pointsForDatedRangeOverride(
             DatedRangeContext(startDate: override.start, endDate: override.end ?? .distantFuture, minValue: range.minValue, maxValue: range.maxValue),
             xAxisValues: xAxisValues)
+
     }
 }
 

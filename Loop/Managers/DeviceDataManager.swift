@@ -682,6 +682,7 @@ final class DeviceDataManager {
                 }
                 // if temp still on set it
                 let endlastTemp = cdates.max()! + TimeInterval(last.duration*60)
+                // TO - DO check if its even really set then ....
                 if Date() < endlastTemp {
                     //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
                     //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
@@ -692,6 +693,10 @@ final class DeviceDataManager {
                     self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride()
                     self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
                     let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+                }
+                else {
+                    //last temp has expired - do a hard cancel to fix the UI
+                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
                 }
             } catch let jsonError {
                 print(jsonError)

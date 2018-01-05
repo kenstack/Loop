@@ -633,7 +633,7 @@ final class DeviceDataManager {
         //look at users nightscout treatments collection and implement temporary BG targets using an override called remoteTempTarget that was added to Loopkit
         let glucoseTargetRangeSchedule = self.loopManager.settings.glucoseTargetRangeSchedule
         //user set overrides always have precedence
-        if glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout) == true || (glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal))!  {return}
+        if glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)  == true || glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)  == true {return}
         let nightscoutService = remoteDataManager.nightscoutService
         guard let nssite = nightscoutService.siteURL?.absoluteString  else {return}
         let formatter = ISO8601DateFormatter()
@@ -682,7 +682,10 @@ final class DeviceDataManager {
                 }
                 // if temp still on set it
                 let endlastTemp = cdates.max()! + TimeInterval(last.duration*60)
+                // TO - DO check if its even really set then ....
                 if Date() < endlastTemp {
+                    // != covers nil case
+                    if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
                     //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
                     //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
                     var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
@@ -692,6 +695,13 @@ final class DeviceDataManager {
                     self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride()
                     self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
                     let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+                    }
+                }
+                else {
+                    //last temp has expired - do a hard cancel to fix the UI
+                     if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == true {
+                        self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                    }
                 }
                 else {
                     //hard clear the overide if duration has expired

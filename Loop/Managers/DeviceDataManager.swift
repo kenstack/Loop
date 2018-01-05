@@ -693,6 +693,12 @@ final class DeviceDataManager {
                     self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
                     let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
                 }
+                else {
+                    //hard clear the overide if duration has expired
+                    //to do add if this is set only do this same as set it only if you need it above
+                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                    
+                }
             } catch let jsonError {
                 print(jsonError)
                 return

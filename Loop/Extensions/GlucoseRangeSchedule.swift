@@ -29,6 +29,7 @@ extension GlucoseRangeSchedule {
 }
 
 
+
 extension DoubleRange {
     var averageValue: Double {
         return (maxValue + minValue) / 2

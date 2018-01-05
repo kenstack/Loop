@@ -633,7 +633,7 @@ final class DeviceDataManager {
         //look at users nightscout treatments collection and implement temporary BG targets using an override called remoteTempTarget that was added to Loopkit
         let glucoseTargetRangeSchedule = self.loopManager.settings.glucoseTargetRangeSchedule
         //user set overrides always have precedence
-        if glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout) == true || (glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal))!  {return}
+        if glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)  == true || glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)  == true {return}
         let nightscoutService = remoteDataManager.nightscoutService
         guard let nssite = nightscoutService.siteURL?.absoluteString  else {return}
         let formatter = ISO8601DateFormatter()
@@ -684,7 +684,8 @@ final class DeviceDataManager {
                 let endlastTemp = cdates.max()! + TimeInterval(last.duration*60)
                 // TO - DO check if its even really set then ....
                 if Date() < endlastTemp {
-                    if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == false {
+                    // != covers nil case
+                    if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
                     //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
                     //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
                     var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>

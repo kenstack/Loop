@@ -1,7 +1,7 @@
-git "file:///Users/kennethstack/documents/loopkit" "8f5ce5fba47d6eb91081b541dc15b88bd6644c92"
 github "LoopKit/xDripG5" "v0.8.1"
 github "amplitude/Amplitude-iOS" "v3.14.1"
 github "i-schuetz/SwiftCharts" "0.6.1"
+github "kenstack/Loopkit" "a246ab1a482822af963a71bd537981175035728b"
 github "mddub/G4ShareSpy" "v0.3.3"
 github "mddub/dexcom-share-client-swift" "v0.4.1"
 github "ps2/rileylink_ios" "v1.2.2"

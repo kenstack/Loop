@@ -668,33 +668,31 @@ final class DeviceDataManager {
                 for item in temptargets {
                     cdates.append(formatter.date(from: (item.created_at as String))!)
                 }
-                let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
+                let lastTarget = temptargets[cdates.index(of:cdates.max()!) as! Int]
                 //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
                 //NS doesnt check to see if a duration is created but no targets exist - so we have too
-                if last.duration != 0 {
-                    guard last.targetBottom != nil else {return}
-                    guard last.targetTop != nil else {return}
+                if lastTarget.duration != 0 {
+                    guard lastTarget.targetBottom != nil else {return}
+                    guard lastTarget.targetTop != nil else {return}
                 }
-                //cancel any prior remoteTemp if last duration = 0
-                if last.duration == 0 {
+                //cancel any prior remoteTemp if last duration = 0 ie a cancel temp was sent
+                if lastTarget.duration == 0 {
                     self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
                     return
                 }
                 // if temp still on set it
-                let endlastTemp = cdates.max()! + TimeInterval(last.duration*60)
+                let endlastTemp = cdates.max()! + TimeInterval(lastTarget.duration*60)
                 // TO - DO check if its even really set then ....
                 if Date() < endlastTemp {
                     // != covers nil case
                     if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
-                    //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
-                    //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
-                    var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
-                    var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
-                    rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double]
-                    raw["overrideRanges"] = rawranges as! [String : [Double]]
-                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride()
-                    self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
-                    let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+                        //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
+                        //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
+                        var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
+                        var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
+                        rawranges["remoteTempTarget"] = [lastTarget.targetBottom as! Double, lastTarget.targetTop as! Double]
+                        raw["overrideRanges"] = rawranges as! [String : [Double]]
+                        let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
                     }
                 }
                 else {

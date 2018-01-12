@@ -604,6 +604,9 @@ final class LoopDataManager {
     ///
     /// - Returns: The amount of pending insulin, in units
     /// - Throws: LoopError.configurationError
+    
+    
+   
     private func getPendingInsulin() throws -> Double {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
         
@@ -631,6 +634,8 @@ final class LoopDataManager {
     }
     
     /// - Throws: LoopError.missingDataError
+    
+    
     fileprivate func predictGlucose(using inputs: PredictionInputEffect) throws -> [GlucoseValue] {
         dispatchPrecondition(condition: .onQueue(dataAccessQueue))
         
@@ -660,7 +665,40 @@ final class LoopDataManager {
         if inputs.contains(.retrospection) {
             effects.append(self.retrospectiveGlucoseEffect)
         }
+        // modify for plgs
+       // NSLog(glucoseStore.latestGlucose as! String)
+       // NSLog(glucoseStore.g)
+        //print(glucoseStore.getGlucoseValues(start: Date()-TimeInterval(30*60), completion: GlucoseValue))
+//        glucoseStore.getGlucoseValues(start: Date()-TimeInterval(20*60)) { (result) -> Void in
+//            switch result {
+//            case .failure(let error):
+//                NSLog("couldnt get stored glucose values")
+//            case .success(let values):
+//                NSLog("help")
+//               // var test=values
+//            }
+//
+//            NSLog("after Switch")
+//        }
         
+//        let glucoseUnit = HKUnit.milligramsPerDeciliter()
+//        let velocityUnit = glucoseUnit.unitDivided(by: HKUnit.second())
+//        
+//
+//        glucoseStore.getCachedGlucoseValues(start: Date(timeIntervalSinceNow: -recencyInterval)) { (values) in
+//            let graw = values.map{$0.quantity.doubleValue(for: glucoseUnit)}
+//            var bgvelocity : Double = 0.0
+//            var bgvpred : Double = 0.0
+//            let predtime : Double = 50.0
+//
+//            let d1: Date = values[graw.count-1].endDate
+//            let deltat : Double = d1.timeIntervalSince(values[graw.count-2].endDate)/60.0
+//            bgvelocity = (graw[graw.count-1]-graw[graw.count-2])/deltat
+//            bgvpred = bgvelocity * predtime + graw[graw.count-1]
+//            NSLog("BG Velocity:%f",bgvelocity)
+//            NSLog("BG pred:%f",bgvpred)
+//        }
+
         var prediction = LoopMath.predictGlucose(glucose, momentum: momentum, effects: effects)
         
         // Dosing requires prediction entries at as long as the insulin model duration.
@@ -669,7 +707,13 @@ final class LoopDataManager {
         if let last = prediction.last, last.startDate < finalDate {
             prediction.append(PredictedGlucoseValue(startDate: finalDate, quantity: last.quantity))
         }
-        
+//        struct multiprediction {
+//            var pred : [Date:GlucoseValue]
+//            var lastBG : [GlucoseValue]
+//            var lastVelocity : glucosemm
+//
+//        }
+//        multiprediction =
         return prediction
     }
     

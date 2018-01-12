@@ -11,6 +11,7 @@ import CarbKit
 import HealthKit
 import InsulinKit
 import LoopKit
+import GlucoseKit
 
 
 private enum InsulinCorrection {
@@ -211,7 +212,51 @@ private func targetGlucoseValue(percentEffectDuration: Double, minValue: Double,
 }
 
 
+
+
+private func bgv () -> Double {
+    ///////////////
+    let healthStore = HKHealthStore()
+    let glucoseStore = GlucoseStore(healthStore: healthStore)
+    var recencyInterval = TimeInterval(minutes: 15)
+    var bgvpred : Double = 999
+    glucoseStore?.getCachedGlucoseValues(start: Date(timeIntervalSinceNow: -recencyInterval)) { (values) in
+        let glucoseUnit = HKUnit.milligramsPerDeciliter()
+        let velocityUnit = glucoseUnit.unitDivided(by: HKUnit.second())
+        
+        
+        var bgvelocity : Double = 0.0
+        
+        let predtime : Double = 50.0
+        let graw = values.map{$0.quantity.doubleValue(for: glucoseUnit)}
+        
+        if graw.count>1 {
+            let d1: Date = values[graw.count-1].endDate
+            let deltat : Double = d1.timeIntervalSince(values[graw.count-2].endDate)/60.0
+            bgvelocity = (graw[graw.count-1]-graw[graw.count-2])/deltat
+            bgvpred = bgvelocity * predtime + graw[graw.count-1]
+            NSLog("BG Velocity:%f",bgvelocity)
+            NSLog("BG pred:%f",bgvpred)
+            //return bgvpred
+        }
+        else {bgvpred = 999}
+        
+    }
+    return bgvpred
+}
+
+
+
+
+
+
+
+
 extension Collection where Iterator.Element == GlucoseValue {
+    
+    
+    
+    
 
     /// For a collection of glucose prediction, determine the least amount of insulin delivered at
     /// `date` to correct the predicted glucose to the middle of `correctionRange` at the time of prediction.
@@ -241,17 +286,35 @@ extension Collection where Iterator.Element == GlucoseValue {
         let unit = correctionRange.unit
         let sensitivityValue = sensitivity.doubleValue(for: unit)
         let suspendThresholdValue = suspendThreshold.doubleValue(for: unit)
+        
+        
+        
+        ///////
 
         // For each prediction above target, determine the amount of insulin necessary to correct glucose based on the modeled effectiveness of the insulin at that time
         for prediction in self {
             guard validDateRange.contains(prediction.startDate) else {
                 continue
             }
-
-            // If any predicted value is below the suspend threshold, return immediately
-            guard prediction.quantity >= suspendThreshold else {
+            
+            let bgvthreshold = 80.0
+            NSLog("BGV at suspend check :%f", bgv())
+            guard bgv() > bgvthreshold else {
+                NSLog("Suspending from BGV")
                 return .suspend(min: prediction)
             }
+           
+            // If any predicted value is below the suspend threshold, return immediately
+            guard prediction.quantity >= suspendThreshold else {
+                 NSLog("Suspending from iob prediction")
+                return .suspend(min: prediction)
+            }
+            
+            /////////////////
+            
+            
+            
+            ////////////////////////////////////
 
             // Update range statistics
             if minGlucose == nil || prediction.quantity < minGlucose!.quantity {

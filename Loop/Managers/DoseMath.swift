@@ -214,12 +214,26 @@ private func targetGlucoseValue(percentEffectDuration: Double, minValue: Double,
 
 
 
-private func bgv () -> Double {
+    func bgv () -> Double {
     ///////////////
     let healthStore = HKHealthStore()
     let glucoseStore = GlucoseStore(healthStore: healthStore)
     var recencyInterval = TimeInterval(minutes: 15)
-    var bgvpred : Double = 999
+     var bgvpred : Double = 998
+    
+    
+    let updateGroup = DispatchGroup()
+    
+    // We can only access the last 30 minutes of data if the device is locked.
+    // Cap it there so that we have a consistent view in the widget.
+    let chartStartDate = Date().addingTimeInterval(TimeInterval(minutes: -30))
+    let chartEndDate = Date().addingTimeInterval(TimeInterval(hours: 3))
+    
+    updateGroup.enter()
+    
+    
+    
+    
     glucoseStore?.getCachedGlucoseValues(start: Date(timeIntervalSinceNow: -recencyInterval)) { (values) in
         let glucoseUnit = HKUnit.milligramsPerDeciliter()
         let velocityUnit = glucoseUnit.unitDivided(by: HKUnit.second())
@@ -240,8 +254,10 @@ private func bgv () -> Double {
             //return bgvpred
         }
         else {bgvpred = 999}
-        
+        updateGroup.leave()
     }
+        _ = updateGroup.wait(timeout: .distantFuture)
+        NSLog(":%f",bgvpred)
     return bgvpred
 }
 
@@ -298,14 +314,20 @@ extension Collection where Iterator.Element == GlucoseValue {
             }
             
             let bgvthreshold = 80.0
-            NSLog("BGV at suspend check :%f", bgv())
-            guard bgv() > bgvthreshold else {
+            NSLog("####################################")
+            let bgvprediction = bgv() as Double
+            NSLog("BGV at suspend check :%f", bgvprediction)
+            guard bgvprediction > bgvthreshold else {
+                 NSLog("####################################")
                 NSLog("Suspending from BGV")
                 return .suspend(min: prediction)
             }
            
+            
+        
             // If any predicted value is below the suspend threshold, return immediately
             guard prediction.quantity >= suspendThreshold else {
+                 NSLog("####################################")
                  NSLog("Suspending from iob prediction")
                 return .suspend(min: prediction)
             }

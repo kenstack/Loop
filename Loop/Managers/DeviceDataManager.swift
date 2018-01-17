@@ -684,18 +684,26 @@ final class DeviceDataManager {
                 // TO - DO check if its even really set then ....
                 if Date() < endlastTemp {
                     // != covers nil case
-                    if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
+                   // if glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
                         //there is no method to programatically set the ranges as far as I can tell wihtout directly editing via raw values
                         //To-Do - extend glucoseTargetRangeSchedule to allow range edits ?
+                        //set limits
+                        var lowerTarget : Double = max(70.0,last.targetBottom as! Double)
+                        var upperTarget : Double = min(300.0,last.targetTop as! Double)
+                        //NS events are all in mg/dL so convert raws if user in mmol/L
+                        if glucoseTargetRangeSchedule?.unit == HKUnit.millimolesPerLiter() {
+                            lowerTarget = lowerTarget / 18.0
+                            upperTarget = upperTarget / 18.0
+                        }
                         var raw = (glucoseTargetRangeSchedule?.rawValue) as! Dictionary<String, Any>
                         var rawranges = raw["overrideRanges"] as! Dictionary<String,Any>
-                        rawranges["remoteTempTarget"] = [last.targetBottom as! Double, last.targetTop as! Double]
+                        rawranges["remoteTempTarget"] = [lowerTarget, upperTarget]
                         raw["overrideRanges"] = rawranges as! [String : [Double]]
                         self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride()
                         self.loopManager.settings.glucoseTargetRangeSchedule? = GlucoseRangeSchedule(rawValue: raw )!
                         let remoteTempSuccess = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
-                        print(remoteTempSuccess)
-                    }
+                        print("RemoteTempSet ",remoteTempSuccess)
+               //     }
                 }
                 else {
                     //last temp has expired - do a hard cancel to fix the UI

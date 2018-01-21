@@ -940,6 +940,7 @@ final class StatusTableViewController: ChartsTableViewController {
     @IBAction func toggleWorkoutMode(_ sender: UIBarButtonItem) {
         if workoutMode == true {
             deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .workout)
+            
         } else {
             let vc = UIAlertController(workoutDurationSelectionHandler: { (endDate) in
                 _ = self.deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.workout, until: endDate)

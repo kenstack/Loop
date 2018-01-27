@@ -1,4 +1,4 @@
-git "file:///Users/kennethstack/documents/loopkit" "8fb475d0a52468eedcac0587d53e05a052105c36"
+git "file:///Users/kennethstack/documents/loopkit" "04680eff4866acb00edda0291584f718e6a6090c"
 github "LoopKit/xDripG5" "v0.8.1"
 github "amplitude/Amplitude-iOS" "v3.14.1"
 github "i-schuetz/SwiftCharts" "0.6.1"

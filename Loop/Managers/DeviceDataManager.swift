@@ -642,8 +642,10 @@ final class DeviceDataManager {
                                        .withColonSeparatorInTime]
             //let treatmentWindow : Int = 24 //how far back to look for valid treatments in hours
             let treatmentWindow : TimeInterval = TimeInterval(.hours(24))
-            let lasteventDate : Date = Date() - treatmentWindow
+            let now : Date = Date()
+            let lasteventDate : Date = now - treatmentWindow
             let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target&find[created_at][$gte]="+formatter.string(from: lasteventDate)
+        //+"&find[created_at][$lte]=" + formatter.string(from: now)
             guard let url = URL(string: urlString) else {
                 print ("URL Parsing Error")
                 return

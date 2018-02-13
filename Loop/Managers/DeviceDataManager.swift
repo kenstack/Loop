@@ -627,6 +627,10 @@ final class DeviceDataManager {
         let targetTop : Double?
     }
     
+    func doubleIsEqual(_ a: Double, _ b: Double, _ precision: Double) -> Bool {
+        return fabs(a - b) < precision
+    }
+    
     func setNStemp () {
         // data from URL logic from modified http://mrgott.com/swift-programing/33-rest-api-in-swift-4-using-urlsession-and-jsondecode
         //look at users nightscout treatments collection and implement temporary BG targets using an override called remoteTempTarget that was added to Loopkit
@@ -639,10 +643,12 @@ final class DeviceDataManager {
                                    .withTime,
                                    .withDashSeparatorInDate,
                                    .withColonSeparatorInTime]
-        //let treatmentWindow : Int = 24 //how far back to look for valid treatments in hours
+        //how far back to look for valid treatments in hours
         let treatmentWindow : TimeInterval = TimeInterval(.hours(24))
-        let lasteventDate : Date = Date() - treatmentWindow
-        let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target&find[created_at][$gte]="+formatter.string(from: lasteventDate)
+        let now : Date = Date()
+        let lasteventDate : Date = now - treatmentWindow
+        //only consider treatments from now back to treatmentWindow
+        let urlString = nssite + "/api/v1/treatments.json?find[eventType]=Temporary%20Target&find[created_at][$gte]="+formatter.string(from: lasteventDate)+"&find[created_at][$lte]=" + formatter.string(from: now)
         guard let url = URL(string: urlString) else {
             print ("URL Parsing Error")
             return
@@ -674,27 +680,43 @@ final class DeviceDataManager {
                     guard last.targetBottom != nil else {return}
                     guard last.targetTop != nil else {return}
                 }
-                //cancel any prior remoteTemp if last duration = 0
-                if last.duration == 0 {
-                    self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                let remoteTempEnabled : Bool = (self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget))!
+                //cancel any prior remoteTemp if last duration = 0 and remote temp is active else return anyway
+                if last.duration < 1 {
+                    if remoteTempEnabled  {
+                        self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
+                        NotificationManager.remoteTempSetNotification(duration:last.duration, lowTarget: 0.0, highTarget: 0.0)
+                    }
                     return
                 }
                 // if temp still on set it
                 let endlastTemp = cdates.max()! + TimeInterval(last.duration*60)
-                // TO - DO check if its even really set then ....
                 if Date() < endlastTemp  {
-                        //To-Do add logic to not reset if ranges and durations match
                         let NStargetUnit = HKUnit.milligramsPerDeciliter()
                         let userUnit = self.loopManager.settings.glucoseTargetRangeSchedule?.unit
                         //convert NS temp targets to a HKQuanity with units and set limits
                         let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(70.0,last.targetBottom as! Double))
                         let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(300.0,last.targetTop as! Double))
+                   let currentRange = self.loopManager.settings.glucoseTargetRangeSchedule!.overrideRanges[.remoteTempTarget]!
+                    let activeDates = self.loopManager.settings.glucoseTargetRangeSchedule!.override?.activeDates
+                    //if anything has changes - ranges or duration, reset the temp or set it in the first place if its not set
+                    if  self.doubleIsEqual(currentRange.minValue, lowerTarget.doubleValue(for: userUnit!), 0.01) == false || self.doubleIsEqual(currentRange.maxValue, upperTarget.doubleValue(for: userUnit!), 0.01) == false || abs(activeDates!.end.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(1)) {
                         self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-                       let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+                        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
                         print("-----remoteTempSet Result ",remoteTempSet)
+                        if remoteTempSet! {
+                            NotificationManager.remoteTempSetNotification(duration:last.duration , lowTarget: lowerTarget.doubleValue(for: userUnit!), highTarget:upperTarget.doubleValue(for: userUnit!))
+                        }
+                    }
+                    else
+                    {
+                        print(" temp already running no changes")
+                    }
+                    
+                    
                 }
                 else {
-                    //last temp has expired - do a hard cancel to fix the UI
+                    //last temp has expired - do a hard cancel to fix the UI- it should cancel itself but it doesnt
                     if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == true {
                         self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
                     }

@@ -1,3 +1,4 @@
+github "LoopKit/LoopKit" "v1.5.4"
 github "amplitude/Amplitude-iOS" "v3.14.1"
 github "i-schuetz/SwiftCharts" "0.6.1"
 github "mddub/G4ShareSpy" "v0.3.3"

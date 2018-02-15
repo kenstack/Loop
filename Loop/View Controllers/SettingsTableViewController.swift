@@ -119,7 +119,7 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
         case suspendThreshold
         case insulinModel
         case activeBasalProfile
-        case basalRate
+//        case basalRate
         case basalRateStandard
         case basalRateA
         case basalRateB
@@ -290,14 +290,14 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
             let configCell = tableView.dequeueReusableCell(withIdentifier: ConfigCellIdentifier, for: indexPath)
 
             switch ConfigurationRow(rawValue: indexPath.row)! {
-            case .basalRate:
-                configCell.textLabel?.text = NSLocalizedString("Basal Rates", comment: "The title text for the basal rate schedule")
-
-                if let basalRateSchedule = dataManager.loopManager.basalRateSchedule {
-                    configCell.detailTextLabel?.text = "\(basalRateSchedule.total()) U"
-                } else {
-                    configCell.detailTextLabel?.text = TapToSetString
-                }
+//            case .basalRate:
+//                configCell.textLabel?.text = NSLocalizedString("Basal Rates", comment: "The title text for the basal rate schedule")
+//
+//                if let basalRateSchedule = dataManager.loopManager.basalRateSchedule {
+//                    configCell.detailTextLabel?.text = "\(basalRateSchedule.total()) U"
+//                } else {
+//                    configCell.detailTextLabel?.text = TapToSetString
+//                }
                 
             case .basalRateA:
                 configCell.textLabel?.text = NSLocalizedString("Basal Pattern A", comment: "The title text for the basal rate schedule")
@@ -569,17 +569,17 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 
                 
                 
-            case .basalRate:
-                let scheduleVC = SingleValueScheduleTableViewController()
-
-                if let profile = dataManager.loopManager.basalRateSchedule {
-                    scheduleVC.timeZone = profile.timeZone
-                    scheduleVC.scheduleItems = profile.items
-                }
-                scheduleVC.delegate = self
-                scheduleVC.title = NSLocalizedString("Active Basal Rates", comment: "The title of the basal rate profile screen")
-
-                show(scheduleVC, sender: sender)
+//            case .basalRate:
+//                let scheduleVC = SingleValueScheduleTableViewController()
+//
+//                if let profile = dataManager.loopManager.basalRateSchedule {
+//                    scheduleVC.timeZone = profile.timeZone
+//                    scheduleVC.scheduleItems = profile.items
+//                }
+//                scheduleVC.delegate = self
+//                scheduleVC.title = NSLocalizedString("Active Basal Rates", comment: "The title of the basal rate profile screen")
+//
+//                show(scheduleVC, sender: sender)
                 
             
             case .basalRateStandard:
@@ -934,13 +934,13 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                       //  AnalyticsManager.shared.didChangeBasalRateSchedule()
                     }
                     
-                case .basalRate:
-                    if let controller = controller as? SingleValueScheduleTableViewController {
-                        //add chedk switch and set correctly
-                        dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)                    // dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-
-                        AnalyticsManager.shared.didChangeBasalRateSchedule()
-                    }
+//                case .basalRate:
+//                    if let controller = controller as? SingleValueScheduleTableViewController {
+//                        //add chedk switch and set correctly
+//                        dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)                    // dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
+//
+//                        AnalyticsManager.shared.didChangeBasalRateSchedule()
+//                    }
                 case .glucoseTargetRange:
                     if let controller = controller as? GlucoseRangeScheduleTableViewController {
                         dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone, overrideRanges: controller.overrideRanges, override: dataManager.loopManager.settings.glucoseTargetRangeSchedule?.override)
@@ -1026,7 +1026,7 @@ extension SettingsTableViewController: RadioSelectionTableViewControllerDelegate
                         }
                         AnalyticsManager.shared.didChangeBasalRateSchedule()
                         tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.activeBasalProfile.rawValue, section: Section.configuration.rawValue)], with: .none)
-                        tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.basalRate.rawValue, section: Section.configuration.rawValue)], with: .none)
+                       // tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.basalRate.rawValue, section: Section.configuration.rawValue)], with: .none)
                         
                     }
                 default:

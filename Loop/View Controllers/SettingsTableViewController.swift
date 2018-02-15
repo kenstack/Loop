@@ -558,7 +558,7 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 vc.delegate = self
 
                 show(vc, sender: indexPath)
-                //.activeBasalProfile(dataManager.settings.activeBasalProfile)
+             
             case .activeBasalProfile:
    
                 let vc = RadioSelectionTableViewController.activeBasalProfileSource(dataManager.loopManager.settings.activeBasalProfile!) 

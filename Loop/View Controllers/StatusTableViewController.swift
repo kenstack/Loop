@@ -358,8 +358,7 @@ final class StatusTableViewController: ChartsTableViewController {
 
         workoutMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)
         preMealMode = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)
-       remoteTempTargetMode=deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget)
-        
+       
         
         
         reloadGroup.notify(queue: .main) {

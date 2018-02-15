@@ -382,7 +382,11 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 configCell.textLabel?.text = NSLocalizedString("Active Basal Pattern", comment: "The title text for the active basal pattern row")
                 
                 if let settings = dataManager.loopManager.settings.activeBasalProfile {
-                    configCell.detailTextLabel?.text = settings.description
+                    if dataManager.loopManager.basalRateSchedule != nil {
+                        configCell.detailTextLabel?.text = settings.description
+                    } else {
+                        configCell.detailTextLabel?.text = TapToSetString}
+                    
                 } else {
                     configCell.detailTextLabel?.text = TapToSetString
                 }
@@ -1024,6 +1028,7 @@ extension SettingsTableViewController: RadioSelectionTableViewControllerDelegate
                         case .patternB :
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileB
                         }
+                        let test = dataManager.loopManager.basalRateSchedule
                         AnalyticsManager.shared.didChangeBasalRateSchedule()
                         tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.activeBasalProfile.rawValue, section: Section.configuration.rawValue)], with: .none)
                        // tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.basalRate.rawValue, section: Section.configuration.rawValue)], with: .none)

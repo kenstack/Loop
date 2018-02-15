@@ -9,7 +9,7 @@
 import Foundation
 
 enum BasalProfile: Int, CustomStringConvertible {
-    case standard = 0
+    case standard 
     case patternA
     case patternB
     

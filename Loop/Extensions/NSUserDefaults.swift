@@ -176,6 +176,9 @@ extension UserDefaults {
                     removeObject(forKey: "com.loudnate.Naterade.MaximumBolus")
                     removeObject(forKey: "com.loopkit.Loop.MinimumBGGuard")
                     removeObject(forKey: "com.loudnate.Loop.RetrospectiveCorrectionEnabled")
+                     removeObject(forKey: "com.loudnate.Naterade.BasalRateScheduleA")
+                     removeObject(forKey: "com.loudnate.Naterade.BasalRateScheduleB")
+                    removeObject(forKey: "com.loudnate.Naterade.BasalRateScheduleStandard")
                 }
 
                 let glucoseTargetRangeSchedule: GlucoseRangeSchedule?

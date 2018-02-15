@@ -15,7 +15,11 @@ import HealthKit
 extension UserDefaults {
 
     private enum Key: String {
+        case activeBasalProfile = "com.loudnate.Naterade.activeBasalProfile"
         case basalRateSchedule = "com.loudnate.Naterade.BasalRateSchedule"
+        case basalRateScheduleA = "com.loudnate.Naterade.BasalRateScheduleA"
+        case basalRateScheduleB = "com.loudnate.Naterade.BasalRateScheduleB"
+        case basalRateScheduleStandard = "com.loudnate.Naterade.BasalRateScheduleStandard"
         case batteryChemistry = "com.loopkit.Loop.BatteryChemistry"
         case cgmSettings = "com.loopkit.Loop.cgmSettings"
         case carbRatioSchedule = "com.loudnate.Naterade.CarbRatioSchedule"
@@ -41,6 +45,62 @@ extension UserDefaults {
         }
         set {
             set(newValue?.rawValue, forKey: Key.basalRateSchedule.rawValue)
+        }
+    }
+    
+    var basalRateScheduleA: BasalRateSchedule? {
+        get {
+            if let rawValue = dictionary(forKey: Key.basalRateScheduleA.rawValue) {
+                return BasalRateSchedule(rawValue: rawValue)
+            } else {
+                return nil
+            }
+        }
+        set {
+            set(newValue?.rawValue, forKey: Key.basalRateScheduleA.rawValue)
+        }
+    }
+    
+    var basalRateScheduleB: BasalRateSchedule? {
+        get {
+            if let rawValue = dictionary(forKey: Key.basalRateScheduleB.rawValue) {
+                return BasalRateSchedule(rawValue: rawValue)
+            } else {
+                return nil
+            }
+        }
+        set {
+            set(newValue?.rawValue, forKey: Key.basalRateScheduleB.rawValue)
+        }
+    }
+    
+    var basalRateScheduleStandard: BasalRateSchedule? {
+        get {
+            if let rawValue = dictionary(forKey: Key.basalRateScheduleStandard.rawValue) {
+                return BasalRateSchedule(rawValue: rawValue)
+            } else {
+                return nil
+            }
+        }
+        set {
+            set(newValue?.rawValue, forKey: Key.basalRateScheduleStandard.rawValue)
+        }
+    }
+    
+    
+  
+    
+    
+    var activeBasalProfile: BasalProfile? {
+        get {
+            return BasalProfile(rawValue: integer(forKey: Key.activeBasalProfile.rawValue))
+        }
+        set {
+            if let activeBasalProfile = newValue {
+                set(activeBasalProfile.rawValue, forKey: Key.activeBasalProfile.rawValue)
+            } else {
+                removeObject(forKey: Key.activeBasalProfile.rawValue)
+            }
         }
     }
 
@@ -110,6 +170,7 @@ extension UserDefaults {
                 // Migrate the version 0 case
                 defer {
                     removeObject(forKey: "com.loudnate.Naterade.DosingEnabled")
+                    removeObject(forKey: "com.loudnate.Naterade.activeBasalProfile")
                     removeObject(forKey: "com.loudnate.Naterade.GlucoseTargetRangeSchedule")
                     removeObject(forKey: "com.loudnate.Naterade.MaximumBasalRatePerHour")
                     removeObject(forKey: "com.loudnate.Naterade.MaximumBolus")
@@ -147,7 +208,11 @@ extension UserDefaults {
                     maximumBasalRatePerHour: maximumBasalRatePerHour,
                     maximumBolus: maximumBolus,
                     suspendThreshold: suspendThreshold,
-                    retrospectiveCorrectionEnabled: bool(forKey: "com.loudnate.Loop.RetrospectiveCorrectionEnabled")
+                    retrospectiveCorrectionEnabled: bool(forKey: "com.loudnate.Loop.RetrospectiveCorrectionEnabled"),
+                     basalProfileStandard: basalRateScheduleStandard,
+                    basalProfileA: basalRateScheduleA,
+                    basalProfileB: basalRateScheduleB,
+                    activeBasalProfile: activeBasalProfile
                 )
                 self.loopSettings = settings
 
@@ -219,6 +284,8 @@ extension UserDefaults {
         }
     }
 
+   
+    
     var pumpID: String? {
         get {
             return string(forKey: Key.pumpID.rawValue)

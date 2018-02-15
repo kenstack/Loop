@@ -42,6 +42,10 @@ final class LoopDataManager {
         lastLoopCompleted: Date?,
         lastTempBasal: DoseEntry?,
         basalRateSchedule: BasalRateSchedule? = UserDefaults.standard.basalRateSchedule,
+        basalRateScheduleStandard: BasalRateSchedule? = UserDefaults.standard.basalRateScheduleStandard,
+        basalRateScheduleA: BasalRateSchedule? = UserDefaults.standard.basalRateScheduleA,
+        basalRateScheduleB: BasalRateSchedule? = UserDefaults.standard.basalRateScheduleB,
+        activeBasalprofile: BasalProfile? = UserDefaults.standard.activeBasalProfile,
         carbRatioSchedule: CarbRatioSchedule? = UserDefaults.standard.carbRatioSchedule,
         insulinModelSettings: InsulinModelSettings? = UserDefaults.standard.insulinModelSettings,
         insulinCounteractionEffects: [GlucoseEffectVelocity]? = UserDefaults.standard.insulinCounteractionEffects,
@@ -115,6 +119,8 @@ final class LoopDataManager {
             notify(forChange: .preferences)
         }
     }
+    
+ 
 
     /// The daily schedule of carbs-to-insulin ratios
     /// This is measured in grams/Unit

@@ -83,6 +83,16 @@ extension RadioSelectionTableViewController {
 
         return vc
     }
+    
+    static func activeBasalProfileSource(_ value: BasalProfile) -> T {
+        let vc = T()
+        
+        vc.selectedIndex = value.rawValue
+        vc.options = (0..<3).flatMap({ BasalProfile(rawValue: $0) }).map { String(describing: $0) }
+        vc.contextHelp = NSLocalizedString("Choose Your Active Profile Amongst Standard, A and B", comment: "Instructions on selecting an active basal profile data source")
+        
+        return vc
+    }
 
     static func batteryChemistryType(_ value: BatteryChemistryType) -> T {
         let vc = T()

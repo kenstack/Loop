@@ -273,12 +273,7 @@ final class DeviceDataManager {
      */
     private func updateReservoirVolume(_ units: Double, at date: Date, withTimeLeft timeLeft: TimeInterval?) {
         loopManager.addReservoirValue(units, at: date) { (result) in
-            //////
-            // update BG correction range overrides via NS
-            // this call may be more appropriate somewhere
-            //let allowremoteTempTargets : Bool = true
-           // if allowremoteTempTargets == true {self.setNStemp()}
-            /////
+   
             switch result {
             case .failure(let error):
                 self.setLastError(error: error)

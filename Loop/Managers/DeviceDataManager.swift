@@ -680,10 +680,10 @@ final class DeviceDataManager {
                     guard last.targetBottom != nil else {return}
                     guard last.targetTop != nil else {return}
                 }
-                let remoteTempEnabled : Bool = (self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget))!
+                
                 //cancel any prior remoteTemp if last duration = 0 and remote temp is active else return anyway
                 if last.duration < 1 {
-                    if remoteTempEnabled  {
+                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == true  {
                         self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
                         NotificationManager.remoteTempSetNotification(duration:last.duration, lowTarget: 0.0, highTarget: 0.0)
                     }
@@ -697,16 +697,26 @@ final class DeviceDataManager {
                         //convert NS temp targets to a HKQuanity with units and set limits
                         let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(70.0,last.targetBottom as! Double))
                         let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(300.0,last.targetTop as! Double))
-                   let currentRange = self.loopManager.settings.glucoseTargetRangeSchedule!.overrideRanges[.remoteTempTarget]!
+                    //this traps the issue of the temp never being set before - if never been enabled before its not set so set it and exit
+                    //this will only be used on the first loop thru a new install
+                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == nil {
+                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
+                        return
+                    }
+                    //we know these exist because we know the temp was set before
+                   let currentRange = self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget]!
                     let activeDates = self.loopManager.settings.glucoseTargetRangeSchedule!.override?.activeDates
                     //if anything has changes - ranges or duration, reset the temp or set it in the first place if its not set
-                    if  self.doubleIsEqual(currentRange.minValue, lowerTarget.doubleValue(for: userUnit!), 0.01) == false || self.doubleIsEqual(currentRange.maxValue, upperTarget.doubleValue(for: userUnit!), 0.01) == false || abs(activeDates!.end.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(1)) {
-                        self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-                        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
-                        print("-----remoteTempSet Result ",remoteTempSet)
-                        if remoteTempSet! {
-                            NotificationManager.remoteTempSetNotification(duration:last.duration , lowTarget: lowerTarget.doubleValue(for: userUnit!), highTarget:upperTarget.doubleValue(for: userUnit!))
-                        }
+                    if  self.doubleIsEqual((currentRange?.minValue)!, lowerTarget.doubleValue(for: userUnit!), 0.01) == false || self.doubleIsEqual((currentRange?.maxValue)!, upperTarget.doubleValue(for: userUnit!), 0.01) == false || abs(activeDates!.end.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(1)) {
+                        
+                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
+                        
+//                        self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
+//                        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+//                        print("-----remoteTempSet Result ",remoteTempSet)
+//                        if remoteTempSet! {
+//                            NotificationManager.remoteTempSetNotification(duration:last.duration , lowTarget: lowerTarget.doubleValue(for: userUnit!), highTarget:upperTarget.doubleValue(for: userUnit!))
+//                        }
                     }
                     else
                     {
@@ -728,6 +738,14 @@ final class DeviceDataManager {
             }.resume()
     }
     
+    func setRemoteTemp (lowerTarget: HKQuantity, upperTarget: HKQuantity, userUnit:HKUnit, endlastTemp: Date, duration: Int) {
+        self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit), maxValue: upperTarget.doubleValue(for: userUnit))
+        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
+        print("-----remoteTempSet Result ",remoteTempSet)
+        if remoteTempSet! {
+            NotificationManager.remoteTempSetNotification(duration:duration , lowTarget: lowerTarget.doubleValue(for: userUnit), highTarget:upperTarget.doubleValue(for: userUnit))
+        }
+    }
 
     //////////////////////////
     

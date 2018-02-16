@@ -711,12 +711,6 @@ final class DeviceDataManager {
                         
                         self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
                         
-//                        self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-//                        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
-//                        print("-----remoteTempSet Result ",remoteTempSet)
-//                        if remoteTempSet! {
-//                            NotificationManager.remoteTempSetNotification(duration:last.duration , lowTarget: lowerTarget.doubleValue(for: userUnit!), highTarget:upperTarget.doubleValue(for: userUnit!))
-//                        }
                     }
                     else
                     {

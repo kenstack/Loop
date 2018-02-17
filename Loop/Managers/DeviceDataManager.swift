@@ -619,6 +619,7 @@ final class DeviceDataManager {
     
     //////////////////////////////////////////
     // MARK: - Set Temp Targets From NS
+    // by Loopkit Authors, Ken Stack, Katie DiSimione
     
     struct NStempTarget : Codable {
         let created_at : String
@@ -696,19 +697,23 @@ final class DeviceDataManager {
                         //ns temps are always given in mg/dL
                         let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(70.0,last.targetBottom as! Double))
                         let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(300.0,last.targetTop as! Double))
-                    //this traps the issue of the temp never being set before - if never been enabled before its not set so set it and exit
-                    //this will only be used on the first loop thru a new install
-                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == nil {
+                    //set the temp if override isnt enabled or is nil ie never enabled
+                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
                         self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
                         return
                     }
-                    //we know these exist because we know the temp was set before
                    let currentRange = self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget]!
                     let activeDates = self.loopManager.settings.glucoseTargetRangeSchedule!.override?.activeDates
-                    //if anything has changed - ranges or duration, reset the temp or set it in the first place if its not set
+                    //this handles the case if a remote temp was canceled by a different temp, but the app restarts in between
+                    if currentRange == nil || activeDates == nil {
+                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
+                        return
+                    }
+                    //if anything has changed - ranges or duration, reset the temp 
                     if  self.doubleIsEqual((currentRange?.minValue)!, lowerTarget.doubleValue(for: userUnit!), 0.01) == false || self.doubleIsEqual((currentRange?.maxValue)!, upperTarget.doubleValue(for: userUnit!), 0.01) == false || abs(activeDates!.end.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(1)) {
                         
                         self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
+                        return
                         
                     }
                     else

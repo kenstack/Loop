@@ -87,13 +87,17 @@ extension UserDefaults {
         }
     }
     
-    
+
   
     
     
     var activeBasalProfile: BasalProfile? {
         get {
-            return BasalProfile(rawValue: integer(forKey: Key.activeBasalProfile.rawValue))
+            let rawValue = Key.activeBasalProfile.rawValue
+            let test = integer(forKey:rawValue)
+        return BasalProfile(rawValue: integer(forKey: rawValue))
+   
+    
         }
         set {
             if let activeBasalProfile = newValue {

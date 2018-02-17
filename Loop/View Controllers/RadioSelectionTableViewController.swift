@@ -86,9 +86,10 @@ extension RadioSelectionTableViewController {
     
     static func activeBasalProfileSource(_ value: BasalProfile) -> T {
         let vc = T()
-        
-        vc.selectedIndex = value.rawValue
-        vc.options = (0..<3).flatMap({ BasalProfile(rawValue: $0) }).map { String(describing: $0) }
+        if value.rawValue != 0 {
+            vc.selectedIndex = value.rawValue}
+        //dont offer not set
+        vc.options = (1..<4).flatMap({ BasalProfile(rawValue: $0) }).map { String(describing: $0) }
         vc.contextHelp = NSLocalizedString("Choose Your Active Profile Amongst Standard, A and B", comment: "Instructions on selecting an active basal profile data source")
         
         return vc

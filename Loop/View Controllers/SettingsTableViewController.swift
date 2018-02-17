@@ -381,15 +381,16 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
             case .activeBasalProfile:
                 configCell.textLabel?.text = NSLocalizedString("Active Basal Pattern", comment: "The title text for the active basal pattern row")
                 
-                if let settings = dataManager.loopManager.settings.activeBasalProfile {
-                    if dataManager.loopManager.basalRateSchedule != nil {
-                        configCell.detailTextLabel?.text = settings.description
+                let settings = dataManager.loopManager.settings.activeBasalProfile
+                    if settings != .notSet {
+                   
+                        configCell.detailTextLabel?.text = settings?.description
                     } else {
                         configCell.detailTextLabel?.text = TapToSetString}
                     
-                } else {
-                    configCell.detailTextLabel?.text = TapToSetString
-                }
+//                } else {
+//                    configCell.detailTextLabel?.text = TapToSetString
+//                }
             case .maxBasal:
                 configCell.textLabel?.text = NSLocalizedString("Maximum Basal Rate", comment: "The title text for the maximum basal rate value")
 
@@ -1027,6 +1028,9 @@ extension SettingsTableViewController: RadioSelectionTableViewControllerDelegate
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileA
                         case .patternB :
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileB
+                        case .notSet :
+                            dataManager.loopManager.basalRateSchedule = nil
+
                         }
                         let test = dataManager.loopManager.basalRateSchedule
                         AnalyticsManager.shared.didChangeBasalRateSchedule()

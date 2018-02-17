@@ -9,6 +9,7 @@
 import Foundation
 
 enum BasalProfile: Int, CustomStringConvertible {
+    case notSet = 0
     case standard 
     case patternA
     case patternB
@@ -21,6 +22,8 @@ enum BasalProfile: Int, CustomStringConvertible {
             return NSLocalizedString("Pattern A", comment: "Describing basal pattern A")
         case .patternB:
             return NSLocalizedString("Pattern B", comment: "Describing basal pattern B")
+        case .notSet:
+            return NSLocalizedString("Pattern Not Set", comment: "Describing basal pattern not set")
         }
     }
 }

@@ -94,7 +94,6 @@ extension UserDefaults {
     var activeBasalProfile: BasalProfile? {
         get {
             let rawValue = Key.activeBasalProfile.rawValue
-            let test = integer(forKey:rawValue)
         return BasalProfile(rawValue: integer(forKey: rawValue))
    
     

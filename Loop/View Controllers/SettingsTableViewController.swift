@@ -382,9 +382,12 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 configCell.textLabel?.text = NSLocalizedString("Active Basal Pattern", comment: "The title text for the active basal pattern row")
                 
                 let settings = dataManager.loopManager.settings.activeBasalProfile
-                    if settings != .notSet {
-                   
-                        configCell.detailTextLabel?.text = settings?.description
+         
+                
+                //if they are nil that means nothig has been set yet
+                    if settings != nil && dataManager.loopManager.basalRateSchedule != nil {
+                        let unitslabel : String = "\(dataManager.loopManager.basalRateSchedule!.total()) U"
+                        configCell.detailTextLabel?.text = (settings?.description)! + "   " + unitslabel
                     } else {
                         configCell.detailTextLabel?.text = TapToSetString}
                     
@@ -565,7 +568,7 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 show(vc, sender: indexPath)
              
             case .activeBasalProfile:
-   
+                //check to see if a basal profile that was active got deleted by the user - if so,
                 let vc = RadioSelectionTableViewController.activeBasalProfileSource(dataManager.loopManager.settings.activeBasalProfile!) 
                 vc.title = sender?.textLabel?.text
                     vc.delegate = self
@@ -925,27 +928,33 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 case .basalRateStandard:
                     if let controller = controller as? SingleValueScheduleTableViewController {
                         dataManager.loopManager.settings.basalProfileStandard = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                      //  AnalyticsManager.shared.didChangeBasalRateSchedule()
+                        //this checks for the edge case of the active profile being deleted by the user - if so set to nil actual basal profile
+                        if dataManager.loopManager.settings.activeBasalProfile == .standard && BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone) == nil {
+                            dataManager.loopManager.basalRateSchedule = nil
+                            dataManager.loopManager.settings.activeBasalProfile = .notSet
+                        }
+                        
                     }
                 case .basalRateA:
                     if let controller = controller as? SingleValueScheduleTableViewController {
                         dataManager.loopManager.settings.basalProfileA = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                      //  AnalyticsManager.shared.didChangeBasalRateSchedule()
+                     
+                        if dataManager.loopManager.settings.activeBasalProfile == .patternA && BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone) == nil {
+                            dataManager.loopManager.basalRateSchedule = nil
+                            dataManager.loopManager.settings.activeBasalProfile = .notSet
+                        }
                     }
                     
                 case .basalRateB:
                     if let controller = controller as? SingleValueScheduleTableViewController {
                                  dataManager.loopManager.settings.basalProfileB = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-                      //  AnalyticsManager.shared.didChangeBasalRateSchedule()
+                        if dataManager.loopManager.settings.activeBasalProfile == .patternB && BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone) == nil {
+                            dataManager.loopManager.basalRateSchedule = nil
+                            dataManager.loopManager.settings.activeBasalProfile = .notSet
+                        }
                     }
                     
-//                case .basalRate:
-//                    if let controller = controller as? SingleValueScheduleTableViewController {
-//                        //add chedk switch and set correctly
-//                        dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)                    // dataManager.loopManager.basalRateSchedule = BasalRateSchedule(dailyItems: controller.scheduleItems, timeZone: controller.timeZone)
-//
-//                        AnalyticsManager.shared.didChangeBasalRateSchedule()
-//                    }
+
                 case .glucoseTargetRange:
                     if let controller = controller as? GlucoseRangeScheduleTableViewController {
                         dataManager.loopManager.settings.glucoseTargetRangeSchedule = GlucoseRangeSchedule(unit: controller.unit, dailyItems: controller.scheduleItems, timeZone: controller.timeZone, overrideRanges: controller.overrideRanges, override: dataManager.loopManager.settings.glucoseTargetRangeSchedule?.override)
@@ -1019,21 +1028,37 @@ extension SettingsTableViewController: RadioSelectionTableViewControllerDelegate
             case .configuration:
                 switch ConfigurationRow(rawValue: indexPath.row)! {
                 case .activeBasalProfile:
-                    if let selectedIndex = controller.selectedIndex, let dataSource = BasalProfile(rawValue: selectedIndex) {
-                        dataManager.loopManager.settings.activeBasalProfile = dataSource
+                    //+1 account for hidden row re notSet
+                    if let selectedIndex = controller.selectedIndex, let dataSource = BasalProfile(rawValue: selectedIndex + 1) {
+                        
                         switch (dataSource) {
+                            
+                      
                         case .standard :
+                            if dataManager.loopManager.settings.basalProfileStandard != nil {
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileStandard
+                                dataManager.loopManager.settings.activeBasalProfile = dataSource
+                                AnalyticsManager.shared.didChangeBasalRateSchedule()
+                            }
                         case .patternA :
+                            if dataManager.loopManager.settings.basalProfileA != nil {
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileA
+                                dataManager.loopManager.settings.activeBasalProfile = dataSource
+                                AnalyticsManager.shared.didChangeBasalRateSchedule()
+                            }
                         case .patternB :
+                            if dataManager.loopManager.settings.basalProfileB != nil {
                                 dataManager.loopManager.basalRateSchedule = dataManager.loopManager.settings.basalProfileB
-                        case .notSet :
-                            dataManager.loopManager.basalRateSchedule = nil
+                                dataManager.loopManager.settings.activeBasalProfile = dataSource
+                                AnalyticsManager.shared.didChangeBasalRateSchedule()
+                            }
+       
 
+                        case .notSet:
+                            ()
                         }
-                        let test = dataManager.loopManager.basalRateSchedule
-                        AnalyticsManager.shared.didChangeBasalRateSchedule()
+                     
+                        
                         tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.activeBasalProfile.rawValue, section: Section.configuration.rawValue)], with: .none)
                        // tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.basalRate.rawValue, section: Section.configuration.rawValue)], with: .none)
                         

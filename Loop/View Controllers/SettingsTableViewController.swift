@@ -986,6 +986,7 @@ final class SettingsTableViewController: UITableViewController, DailyValueSchedu
                 }
 
                 tableView.reloadRows(at: [indexPath], with: .none)
+                tableView.reloadRows(at: [IndexPath(row: ConfigurationRow.activeBasalProfile.rawValue, section: Section.configuration.rawValue)], with: .none)
             default:
                 break
             }

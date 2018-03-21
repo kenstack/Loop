@@ -225,6 +225,7 @@ final class G5CGMManager: DexCGMManager, TransmitterDelegate {
     func transmitter(_ transmitter: Transmitter, didReadUnknownData data: Data) {
         logger.error("Unknown sensor data: " + data.hexadecimalString)
         // This can be used for protocol discovery, but isn't necessary for normal operation
+        // delegate?.cgmManager(self, didUpdateWith: .noData)
     }
 }
 

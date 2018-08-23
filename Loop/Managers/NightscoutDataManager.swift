@@ -133,8 +133,8 @@ final class NightscoutDataManager {
         var loopBGTlow : String = ""
         var loopBGThigh : String = ""
         var loopEventualBG : String = ""
-        if let loopBGRange = deviceDataManager.loopManager.settings.glucoseTargetRangeSchedule?.value(at: Date()), let userUnit = deviceDataManager.loopManager.settings.glucoseTargetRangeSchedule?.unit {
-            if userUnit == HKUnit.milligramsPerDeciliter() {
+        if let loopBGRange = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.value(at: Date()), let userUnit = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.unit {
+            if userUnit == HKUnit.milligramsPerDeciliter {
                 loopBGTlow = String(Int((loopBGRange.minValue)))
                 loopBGThigh = String(Int((loopBGRange.maxValue)))
             }
@@ -150,8 +150,8 @@ final class NightscoutDataManager {
             loopBGThigh = "N/A"
         }
         
-        if let loopEventualBGquantity = predictedGlucose?.last?.quantity, let userUnit = deviceDataManager.loopManager.settings.glucoseTargetRangeSchedule?.unit  {
-            if userUnit == HKUnit.milligramsPerDeciliter() {
+        if let loopEventualBGquantity = predictedGlucose?.last?.quantity, let userUnit = deviceManager.loopManager.settings.glucoseTargetRangeSchedule?.unit  {
+            if userUnit == HKUnit.milligramsPerDeciliter {
                 loopEventualBG = String(Int(loopEventualBGquantity.doubleValue(for: userUnit)))
             }
             else

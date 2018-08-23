@@ -1092,6 +1092,10 @@ extension LoopDataManager {
         
         // Velocity denominator set to safe fixed default retrospection interval of 30*60 = 1800 seconds
         let velocity = HKQuantity(unit: velocityUnit, doubleValue: scaledDiscrepancy / 1800.0)
+        //modified to avoid issues with a short term bump in BG affecting RC
+//        let descrepancyTime = max(change.end.endDate.timeIntervalSince(change.start.endDate), settings.retrospectiveCorrectionInterval)
+//        let velocity = HKQuantity(unit: velocityUnit, doubleValue: discrepancy / descrepancyTime)
+        
         let type = HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bloodGlucose)!
         let glucose = HKQuantitySample(type: type, quantity: change.end.quantity, start: change.end.startDate, end: change.end.endDate)
         

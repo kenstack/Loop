@@ -386,10 +386,10 @@ extension DeviceDataManager: CustomDebugStringConvertible {
 //////
 // update BG correction range overrides via NS
 // this call may be more appropriate somewhere
-let allowremoteTempTargets : Bool = true
-if allowremoteTempTargets == true {self.setNStemp()}
+//let allowremoteTempTargets : Bool = true
+//if allowremoteTempTargets == true {self.setNStemp()}
 /////
-
+setNStemp()
 //////////////////////////////////////////
 // MARK: - Set Temp Targets From NS
 // by LoopKit Authors Ken Stack, Katie DiSimone

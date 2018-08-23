@@ -303,8 +303,6 @@ fileprivate extension GlucoseRangeSchedule.Override.Context {
             return .preMeal
         case .workout:
             return .workout
-        case .remoteTempTarget:
-            return .remoteTempTarget
         }
     }
 }
@@ -316,8 +314,6 @@ fileprivate extension GlucoseRangeScheduleOverrideUserInfo.Context {
             return .preMeal
         case .workout:
             return .workout
-        case .remoteTempTarget:
-            return .remoteTempTarget
         }
     }
 }

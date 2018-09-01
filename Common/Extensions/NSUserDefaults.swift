@@ -78,6 +78,7 @@ extension UserDefaults {
                     removeObject(forKey: "com.loudnate.Naterade.GlucoseTargetRangeSchedule")
                     removeObject(forKey: "com.loudnate.Naterade.MaximumBasalRatePerHour")
                     removeObject(forKey: "com.loudnate.Naterade.MaximumBolus")
+                    removeObject(forKey: "com.loudnate.Naterade.MaximumIOB")
                     removeObject(forKey: "com.loopkit.Loop.MinimumBGGuard")
                     removeObject(forKey: "com.loudnate.Loop.RetrospectiveCorrectionEnabled")
                 }
@@ -100,6 +101,11 @@ extension UserDefaults {
                 if maximumBasalRatePerHour! <= 0 {
                     maximumBasalRatePerHour = nil
                 }
+                
+                var maximumIOB : Double? = double(forKey: "com.loudnate.Naterade.MaximumIOB")
+                if maximumIOB! <= 0 {
+                    maximumIOB = nil
+                }
 
                 var maximumBolus: Double? = double(forKey: "com.loudnate.Naterade.MaximumBolus")
                 if maximumBolus! <= 0 {
@@ -111,7 +117,7 @@ extension UserDefaults {
                     glucoseTargetRangeSchedule: glucoseTargetRangeSchedule,
                     maximumBasalRatePerHour: maximumBasalRatePerHour,
                     maximumBolus: maximumBolus,
-                    suspendThreshold: suspendThreshold,
+                    maximumIOB: maximumIOB, suspendThreshold: suspendThreshold,
                     retrospectiveCorrectionEnabled: bool(forKey: "com.loudnate.Loop.RetrospectiveCorrectionEnabled"),
                     integralRetrospectiveCorrectionEnabled: bool(forKey: "com.loopkit.Loop.IntegralRetrospectiveCorrectionEnabled")
                 )

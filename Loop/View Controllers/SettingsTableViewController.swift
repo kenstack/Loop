@@ -297,7 +297,7 @@ final class SettingsTableViewController: UITableViewController {
             case .deliveryLimits:
                 configCell.textLabel?.text = NSLocalizedString("Delivery Limits", comment: "Title text for delivery limits")
 
-                if dataManager.loopManager.settings.maximumBolus == nil || dataManager.loopManager.settings.maximumBasalRatePerHour == nil {
+                if dataManager.loopManager.settings.maximumBolus == nil || dataManager.loopManager.settings.maximumBasalRatePerHour == nil && dataManager.loopManager.settings.maximumIOB == nil{
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 } else {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.EnabledString
@@ -509,6 +509,7 @@ final class SettingsTableViewController: UITableViewController {
 
                 vc.maximumBasalRatePerHour = dataManager.loopManager.settings.maximumBasalRatePerHour
                 vc.maximumBolus = dataManager.loopManager.settings.maximumBolus
+                vc.maximumIOB = dataManager.loopManager.settings.maximumIOB
 
                 vc.title = sender?.textLabel?.text
                 vc.delegate = self
@@ -714,6 +715,11 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
             dataManager.loopManager.settings.maximumBolus = maxBolusUnits
             tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
         }
+        
+        if let maxIOBUnits = pumpManagerSetupViewController.maxIOBUnits {
+            dataManager.loopManager.settings.maximumBolus = maxIOBUnits
+            tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
+        }
 
         show(pumpManager.settingsViewController(), sender: nil)
         dismiss(animated: true, completion: nil)
@@ -843,6 +849,12 @@ extension SettingsTableViewController: DeliveryLimitSettingsTableViewControllerD
     func deliveryLimitSettingsTableViewControllerDidUpdateMaximumBolus(_ vc: DeliveryLimitSettingsTableViewController) {
         dataManager.loopManager.settings.maximumBolus = vc.maximumBolus
 
+        tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
+    }
+    
+    func deliveryLimitSettingsTableViewControllerDidUpdateMaximumIOB(_ vc: DeliveryLimitSettingsTableViewController) {
+        dataManager.loopManager.settings.maximumIOB = vc.maximumIOB
+        
         tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
     }
 }

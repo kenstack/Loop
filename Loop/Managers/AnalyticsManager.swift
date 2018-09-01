@@ -105,6 +105,12 @@ final class AnalyticsManager: IdentifiableClass {
         if newValue.maximumBolus != oldValue.maximumBolus {
             logEvent("Maximum bolus change")
         }
+        
+        if newValue.maximumIOB != oldValue.maximumIOB {
+            logEvent("Maximum iob change")
+        }
+        
+        
 
         if newValue.suspendThreshold != oldValue.suspendThreshold {
             logEvent("Minimum BG Guard change")

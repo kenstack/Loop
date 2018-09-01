@@ -374,20 +374,73 @@ extension Collection where Iterator.Element == GlucoseValue {
         {
             maxBasalRate = scheduledBasalRate
         }
+        ////////////////////////
+        let defaults = UserDefaults(suiteName: Bundle.main.appGroupSuiteName)
+        let healthStore = HKHealthStore()
 
+        let cacheStore = PersistenceController.controllerInAppGroupDirectory()
+
+//        let glucoseStore = GlucoseStore(
+//            healthStore: healthStore,
+//            cacheStore: cacheStore,
+//            observationEnabled: false
+//        )
+
+        let doseStore = DoseStore(
+            healthStore: healthStore,
+            cacheStore: cacheStore,
+            observationEnabled: false,
+            insulinModel: defaults?.insulinModelSettings?.model,
+            basalProfile: defaults?.basalRateSchedule,
+            insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
+        )
+        
+        
+        let iobGroup = DispatchGroup()
+        iobGroup.enter()
+        doseStore.insulinOnBoard(at: Date()) { (result) in
+            let activeInsulin: Double?
+            switch result {
+            case .success(let value):
+                activeInsulin = value.value
+            case .failure:
+                activeInsulin = nil
+            }
+            print("/////////////////////////////////")
+            print(activeInsulin)
+            print("/////////////////////////////////")
+            
+            
+            //let maxIOB: Double = 1.0
+            let maximumIOB = defaults?.loopSettings?.maximumIOB
+            if activeInsulin != nil && maximumIOB != nil{
+                
+                if case .aboveRange(min: let min, correcting: _, minTarget: let highBasalThreshold, units: _)? = correction,
+                        activeInsulin as! Double > maximumIOB as! Double
+                            {
+                                maxBasalRate = scheduledBasalRate
+                                print("limiting rate")
+                            }
+            }
+            iobGroup.leave()
+        }
+       
+        iobGroup.wait()
+        print("calculating temp")
         let temp = correction?.asTempBasal(
             scheduledBasalRate: scheduledBasalRate,
             maxBasalRate: maxBasalRate,
             duration: duration,
             minimumProgrammableIncrementPerUnit: minimumProgrammableIncrementPerUnit
         )
-
         return temp?.ifNecessary(
             at: date,
             scheduledBasalRate: scheduledBasalRate,
             lastTempBasal: lastTempBasal,
             continuationInterval: continuationInterval
         )
+        
+        
     }
 
     /// Recommends a bolus to conform a glucose prediction timeline to a correction range

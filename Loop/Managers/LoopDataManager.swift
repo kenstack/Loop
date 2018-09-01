@@ -1190,6 +1190,7 @@ extension LoopDataManager {
             let insulinSensitivity = insulinSensitivitySchedule,
             let basalRates = basalRateSchedule,
             let maxBolus = settings.maximumBolus,
+            let maxIOB = settings.maximumIOB,
             let model = insulinModelSettings?.model
         else {
             throw LoopError.configurationError("Check settings")

@@ -18,6 +18,8 @@ struct LoopSettings {
     var maximumBasalRatePerHour: Double?
 
     var maximumBolus: Double?
+    
+    var maximumIOB: Double?
 
     var suspendThreshold: GlucoseThreshold? = nil
 
@@ -61,6 +63,8 @@ extension LoopSettings: RawRepresentable {
         self.maximumBasalRatePerHour = rawValue["maximumBasalRatePerHour"] as? Double
 
         self.maximumBolus = rawValue["maximumBolus"] as? Double
+        
+        self.maximumIOB = rawValue["maximumIOB"] as? Double
 
         if let rawThreshold = rawValue["minimumBGGuard"] as? GlucoseThreshold.RawValue {
             self.suspendThreshold = GlucoseThreshold(rawValue: rawThreshold)
@@ -86,6 +90,7 @@ extension LoopSettings: RawRepresentable {
         raw["glucoseTargetRangeSchedule"] = glucoseTargetRangeSchedule?.rawValue
         raw["maximumBasalRatePerHour"] = maximumBasalRatePerHour
         raw["maximumBolus"] = maximumBolus
+        raw["maximumIOB"] = maximumIOB
         raw["minimumBGGuard"] = suspendThreshold?.rawValue
 
         return raw

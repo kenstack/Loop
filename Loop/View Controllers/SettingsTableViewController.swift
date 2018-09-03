@@ -540,7 +540,7 @@ final class SettingsTableViewController: UITableViewController {
 
                 vc.maximumBasalRatePerHour = dataManager.loopManager.settings.maximumBasalRatePerHour
                 vc.maximumBolus = dataManager.loopManager.settings.maximumBolus
-                vc.maximumIOB = dataManager.loopManager.settings.maximumIOB
+               // vc.maximumIOB = dataManager.loopManager.settings.maximumIOB
 
                 vc.title = sender?.textLabel?.text
                 vc.delegate = self
@@ -747,10 +747,7 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
             tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
         }
         
-        if let maxIOBUnits = pumpManagerSetupViewController.maxIOBUnits {
-            dataManager.loopManager.settings.maximumIOB = maxIOBUnits
-            tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
-        }
+       
 
         show(pumpManager.settingsViewController(), sender: nil)
         dismiss(animated: true, completion: nil)
@@ -893,12 +890,5 @@ extension SettingsTableViewController: DeliveryLimitSettingsTableViewControllerD
         tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
     }
     
-    func deliveryLimitSettingsTableViewControllerDidUpdateMaximumIOB(_ vc: DeliveryLimitSettingsTableViewController) {
-        print(vc.maximumIOB)
-        dataManager.loopManager.settings.maximumIOB = vc.maximumIOB
-        print("in max change")
-        print(dataManager.loopManager.settings.maximumIOB)
-        
-        tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
-    }
+    
 }

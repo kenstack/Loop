@@ -1,0 +1,6 @@
+git "file:///Users/kennethstack/documents/loopkit" "remoteTempTarget"
+github "i-schuetz/SwiftCharts" == 0.6.1
+github "mddub/dexcom-share-client-swift" == 0.4.1
+github "mddub/G4ShareSpy" == 0.3.3
+github "ps2/rileylink_ios" == 1.2.2
+github "amplitude/Amplitude-iOS" ~> 3.8.5

@@ -407,12 +407,15 @@ extension Collection where Iterator.Element == GlucoseValue {
                 activeInsulin = nil
             }
             print("/////////////////////////////////")
+            print("iob")
             print(activeInsulin)
             print("/////////////////////////////////")
             
             
             //let maxIOB: Double = 1.0
             let maximumIOB = defaults?.loopSettings?.maximumIOB
+            print("max iob")
+            print(maximumIOB)
             if activeInsulin != nil && maximumIOB != nil{
                 
                 if case .aboveRange(min: let min, correcting: _, minTarget: let highBasalThreshold, units: _)? = correction,

@@ -82,6 +82,7 @@ final class SettingsTableViewController: UITableViewController {
     fileprivate enum ConfigurationRow: Int, CaseCountable {
         case glucoseTargetRange = 0
         case suspendThreshold
+        case maximumIOB
         case basalRate
         case deliveryLimits
         case insulinModel
@@ -286,6 +287,18 @@ final class SettingsTableViewController: UITableViewController {
                 } else {
                     configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
                 }
+                
+            case .maximumIOB:
+                configCell.textLabel?.text = NSLocalizedString("Maximum Correction IOB (U)", comment: "The title text in settings")
+                
+                if let maximumIOB = dataManager.loopManager.settings.maximumIOB {
+               //     let value = String(format:"%.1f", maximumIOB) ?? SettingsTableViewCell.TapToSetString
+                    let value = valueNumberFormatter.string(from: maximumIOB, unit: "U")
+                    configCell.detailTextLabel?.text = value
+                } else {
+                    configCell.detailTextLabel?.text = SettingsTableViewCell.TapToSetString
+                }
+                
             case .insulinModel:
                 configCell.textLabel?.text = NSLocalizedString("Insulin Model", comment: "The title text for the insulin model setting row")
 
@@ -502,6 +515,24 @@ final class SettingsTableViewController: UITableViewController {
                     vc.title = sender?.textLabel?.text
                     self.show(vc, sender: sender)
                 }
+                
+                
+            case .maximumIOB:
+                if let maximumIOB = dataManager.loopManager.settings.maximumIOB {
+                   // let minBGGuard = dataManager.loopManager.settings.suspendThreshold
+                    let vc = MaximumIOBTableViewController(maximumIOB: maximumIOB)
+                    vc.delegate = self
+                    vc.indexPath = indexPath
+                    vc.title = sender?.textLabel?.text
+                    self.show(vc, sender: sender)
+                } else  {
+                    let vc = MaximumIOBTableViewController(maximumIOB: nil)
+                    vc.delegate = self
+                    vc.indexPath = indexPath
+                    vc.title = sender?.textLabel?.text
+                    self.show(vc, sender: sender)
+                }
+                
             case .insulinModel:
                 performSegue(withIdentifier: InsulinModelSettingsViewController.className, sender: sender)
             case .deliveryLimits:
@@ -717,7 +748,7 @@ extension SettingsTableViewController: PumpManagerSetupViewControllerDelegate {
         }
         
         if let maxIOBUnits = pumpManagerSetupViewController.maxIOBUnits {
-            dataManager.loopManager.settings.maximumBolus = maxIOBUnits
+            dataManager.loopManager.settings.maximumIOB = maxIOBUnits
             tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
         }
 
@@ -822,6 +853,16 @@ extension SettingsTableViewController: LoopKitUI.TextFieldTableViewControllerDel
                     } else {
                         dataManager.loopManager.settings.suspendThreshold = nil
                     }
+                    
+                    
+                case .maximumIOB:
+                    if let controller = controller as? MaximumIOBTableViewController,
+                        let value = controller.value, let maximumIOB = valueNumberFormatter.number(from: value)?.doubleValue {
+                        dataManager.loopManager.settings.maximumIOB = maximumIOB
+                    } else {
+                        dataManager.loopManager.settings.maximumIOB = nil
+                    }
+                    
                 default:
                     assertionFailure()
                 }
@@ -853,7 +894,10 @@ extension SettingsTableViewController: DeliveryLimitSettingsTableViewControllerD
     }
     
     func deliveryLimitSettingsTableViewControllerDidUpdateMaximumIOB(_ vc: DeliveryLimitSettingsTableViewController) {
+        print(vc.maximumIOB)
         dataManager.loopManager.settings.maximumIOB = vc.maximumIOB
+        print("in max change")
+        print(dataManager.loopManager.settings.maximumIOB)
         
         tableView.reloadRows(at: [[Section.configuration.rawValue, ConfigurationRow.deliveryLimits.rawValue]], with: .none)
     }

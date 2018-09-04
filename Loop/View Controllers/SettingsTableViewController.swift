@@ -292,7 +292,6 @@ final class SettingsTableViewController: UITableViewController {
                 configCell.textLabel?.text = NSLocalizedString("Maximum Correction IOB (U)", comment: "The title text in settings")
                 
                 if let maximumIOB = dataManager.loopManager.settings.maximumIOB {
-               //     let value = String(format:"%.1f", maximumIOB) ?? SettingsTableViewCell.TapToSetString
                     let value = valueNumberFormatter.string(from: maximumIOB, unit: "U")
                     configCell.detailTextLabel?.text = value
                 } else {
@@ -540,8 +539,6 @@ final class SettingsTableViewController: UITableViewController {
 
                 vc.maximumBasalRatePerHour = dataManager.loopManager.settings.maximumBasalRatePerHour
                 vc.maximumBolus = dataManager.loopManager.settings.maximumBolus
-               // vc.maximumIOB = dataManager.loopManager.settings.maximumIOB
-
                 vc.title = sender?.textLabel?.text
                 vc.delegate = self
                 vc.syncSource = dataManager.pumpManager

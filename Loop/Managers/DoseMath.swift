@@ -374,62 +374,48 @@ extension Collection where Iterator.Element == GlucoseValue {
         {
             maxBasalRate = scheduledBasalRate
         }
+        
+        ////////////////////////
+        //logic for max iob limit
         ////////////////////////
         let defaults = UserDefaults(suiteName: Bundle.main.appGroupSuiteName)
-        let healthStore = HKHealthStore()
-
-        let cacheStore = PersistenceController.controllerInAppGroupDirectory()
-
-//        let glucoseStore = GlucoseStore(
-//            healthStore: healthStore,
-//            cacheStore: cacheStore,
-//            observationEnabled: false
-//        )
-
-        let doseStore = DoseStore(
-            healthStore: healthStore,
-            cacheStore: cacheStore,
-            observationEnabled: false,
-            insulinModel: defaults?.insulinModelSettings?.model,
-            basalProfile: defaults?.basalRateSchedule,
-            insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
-        )
-        
-        
-        let iobGroup = DispatchGroup()
-        iobGroup.enter()
-        doseStore.insulinOnBoard(at: Date()) { (result) in
-            let activeInsulin: Double?
-            switch result {
-            case .success(let value):
-                activeInsulin = value.value
-            case .failure:
-                activeInsulin = nil
-            }
-            print("/////////////////////////////////")
-            print("iob")
-            print(activeInsulin)
-            print("/////////////////////////////////")
-            
-            
-            //let maxIOB: Double = 1.0
-            let maximumIOB = defaults?.loopSettings?.maximumIOB
-            print("max iob")
-            print(maximumIOB)
-            if activeInsulin != nil && maximumIOB != nil{
-                
-                if case .aboveRange(min: let min, correcting: _, minTarget: let highBasalThreshold, units: _)? = correction,
+        if let maximumIOB = defaults?.loopSettings?.maximumIOB {
+            let healthStore = HKHealthStore()
+            let cacheStore = PersistenceController.controllerInAppGroupDirectory()
+            let doseStore = DoseStore(
+                healthStore: healthStore,
+                cacheStore: cacheStore,
+                observationEnabled: false,
+                insulinModel: defaults?.insulinModelSettings?.model,
+                basalProfile: defaults?.basalRateSchedule,
+                insulinSensitivitySchedule: defaults?.insulinSensitivitySchedule
+            )
+            let maxiobGroup = DispatchGroup()
+            maxiobGroup.enter()
+            doseStore.insulinOnBoard(at: Date()) { (result) in
+                let activeInsulin: Double?
+                switch result {
+                case .success(let value):
+                    activeInsulin = value.value
+                case .failure:
+                    activeInsulin = nil
+                }
+            if activeInsulin != nil {
+                if case .aboveRange(min: _, correcting: _, minTarget: _, units: _)? = correction,
                         activeInsulin as! Double > maximumIOB as! Double
                             {
                                 maxBasalRate = scheduledBasalRate
-                                print("limiting rate")
                             }
+                }
+            maxiobGroup.leave()
             }
-            iobGroup.leave()
-        }
-       
-        iobGroup.wait()
-        print("calculating temp")
+        maxiobGroup.wait()
+    }
+        ///////////////////////////
+        //finish maximum iob logic
+        ///////////////////////////
+        
+        
         let temp = correction?.asTempBasal(
             scheduledBasalRate: scheduledBasalRate,
             maxBasalRate: maxBasalRate,

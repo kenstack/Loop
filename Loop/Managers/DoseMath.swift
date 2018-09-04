@@ -402,7 +402,7 @@ extension Collection where Iterator.Element == GlucoseValue {
                 }
             if activeInsulin != nil {
                 if case .aboveRange(min: _, correcting: _, minTarget: _, units: _)? = correction,
-                        activeInsulin as! Double > maximumIOB as! Double
+                    activeInsulin as! Double  > maximumIOB as! Double
                             {
                                 maxBasalRate = scheduledBasalRate
                             }

@@ -310,8 +310,8 @@ extension DeviceDataManager: PumpManagerDelegate {
                     let userUnit = self.loopManager.settings.glucoseTargetRangeSchedule?.unit
                     //convert NS temp targets to an HKQuanity with units and set limits (low of 70 mg/dL, high of 300 mg/dL)
                     //ns temps are always given in mg/dL
-                    let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(70.0,last.targetBottom as! Double))
-                    let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(300.0,last.targetTop as! Double))
+                    let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(50.0,last.targetBottom as! Double))
+                    let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(400.0,last.targetTop as! Double))
                     //set the temp if override isn't enabled or is nil ie never enabled
                     if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
                         self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)

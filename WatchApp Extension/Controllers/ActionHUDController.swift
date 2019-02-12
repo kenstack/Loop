@@ -36,7 +36,7 @@ final class ActionHUDController: HUDInterfaceController {
 
     override func update() {
         super.update()
-
+        
         let activeOverrideContext: TemporaryScheduleOverride.Context?
         if let override = loopManager.settings.scheduleOverride, override.isActive() {
             activeOverrideContext = override.context
@@ -80,7 +80,7 @@ final class ActionHUDController: HUDInterfaceController {
         if preMealButtonGroup.state == .on {
             override = nil
         } else {
-            override = loopManager.settings.preMealOverride(for: .hours(1))
+           override = loopManager.settings.preMealOverride(for: .hours(1))
         }
 
         sendOverride(override)

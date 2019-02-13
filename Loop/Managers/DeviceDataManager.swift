@@ -347,6 +347,8 @@ extension DeviceDataManager: PumpManagerDelegate {
                     guard last.targetBottom != nil else {return}
                     guard last.targetTop != nil else {return}
                 }
+                
+                if last.targetTop!.isLess(than: last.targetBottom!) {return}
 
                 // set the remote temp if it's valid and not already set.  Handle the nil issue as well
                 let endlastTemp = cdates.max()! + TimeInterval(.minutes(Double(last.duration)))

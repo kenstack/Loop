@@ -380,7 +380,8 @@ extension DeviceDataManager: PumpManagerDelegate {
                         idArray.append(preset.name)
                     }
                     
-                    //trap error - if NSRemote doesnt exit then return
+                    //trap error - if NSRemote doesnt exist then return
+                    //todo move this sooner
                     guard let index = idArray.index(of:"NSRemote") as? Int else {return}
                     
               //      if let override = self.loopManager.settings.scheduleOverride, override.isActive() != true {
@@ -406,7 +407,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                     let startDate = override?.startDate
                     let activeDate = startDate! + duration
                     
-                   if self.doubleIsEqual(presets[index].settings.basalRateMultiplier!, multiplier, 0.01) ||
+                   if self.doubleIsEqual(presets[index].settings.basalRateMultiplier!, multiplier, 0.01) == false ||
                     self.doubleIsEqual((currentRange.maxValue), upperTarget.doubleValue(for: userUnit!), 1.0) == false ||
                     self.doubleIsEqual((currentRange.minValue), lowerTarget.doubleValue(for: userUnit!), 1.0) == false ||
                     abs(activeDate.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(2)) {
@@ -425,9 +426,7 @@ extension DeviceDataManager: PumpManagerDelegate {
                     return
                     }
 //                    self.doubleIsEqual(<#T##a: Double##Double#>, <#T##b: Double##Double#>, <#T##precision: Double##Double#>)
-                   print(activeDate)
-                   print(endlastTemp)
-                    
+       
 //                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
 //                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
 //                        return

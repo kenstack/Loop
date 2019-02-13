@@ -337,8 +337,10 @@ extension DeviceDataManager: PumpManagerDelegate {
                 
                 //cancel any prior remoteTemp if last duration = 0 and remote temp is active else return anyway
                 if last.duration < 1 {
-                    if let override = self.loopManager.settings.scheduleOverride, override.isActive() {self.loopManager.settings.clearOverride()}
-                    //todo add notifications re remote cancel
+                    if let override = self.loopManager.settings.scheduleOverride, override.isActive() {
+                        self.loopManager.settings.clearOverride()
+                        NotificationManager.sendRemoteTempCancelNotification()
+                    }
                     return
                 }
                 
@@ -379,6 +381,11 @@ extension DeviceDataManager: PumpManagerDelegate {
                         self.loopManager.settings.overridePresets = presets
                         let enactOverride = presets[index].createOverride(beginningAt: cdates.max()!)
                         self.loopManager.settings.scheduleOverride = enactOverride
+                        
+                  
+
+                        NotificationManager.sendRemoteTempSetNotification(lowTarget: String(format:"%.0f",lowerTarget.doubleValue(for: userUnit!)), highTarget: String(format:"%.0f", upperTarget.doubleValue(for: userUnit!)), multiplier: String(format:"%.2f",multiplier), duration: String(last.duration) )
+                        
                         return
                     }
 
@@ -403,6 +410,9 @@ extension DeviceDataManager: PumpManagerDelegate {
                     self.loopManager.settings.overridePresets = presets
                     let enactOverride = presets[index].createOverride(beginningAt: cdates.max()!)
                     self.loopManager.settings.scheduleOverride = enactOverride
+                    
+                     NotificationManager.sendRemoteTempSetNotification(lowTarget: String(format:"%.0f",lowerTarget.doubleValue(for: userUnit!)), highTarget: String(format:"%.0f", upperTarget.doubleValue(for: userUnit!)), multiplier: String(format:"%.2f",multiplier), duration: String(last.duration) )
+                    
                     return
                     }
 

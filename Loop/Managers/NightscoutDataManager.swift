@@ -151,7 +151,7 @@ final class NightscoutDataManager {
         }
         var loopMultiplier = "N/A"
         if let override = deviceManager.loopManager.settings.scheduleOverride, override.isActive(), override.context != .preMeal {
-          loopMultiplier = String(format:"%.1f",override.settings.basalRateMultiplier as! Double)
+          loopMultiplier = String(format:"%.2f",override.settings.basalRateMultiplier as! Double)
            
         }
 

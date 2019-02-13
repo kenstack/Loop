@@ -266,7 +266,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         let duration : Int
         let targetBottom : Double?
         let targetTop : Double?
-        let notes : String
+        let notes : String?
     }
     
     func doubleIsEqual(_ a: Double, _ b: Double, _ precision: Double) -> Bool {
@@ -278,21 +278,24 @@ extension DeviceDataManager: PumpManagerDelegate {
         //look at users nightscout treatments collection and implement temporary BG targets using an override called remoteTempTarget that was added to Loopkit
         //user set overrides always have precedence
         
-        //, override.isActive(), override.context != .NSRemote {
-      //  let test1 = self.loopManager
-     //   let override = self.loopManager.settings.scheduleOverride
-     //   let test = override!.isActive()
+    //check that NSRemote override has been setup
+        var presets = self.loopManager.settings.overridePresets
+        var idArray = [String]()
+        for preset in presets {
+            idArray.append(preset.name)
+        }
+        
+        guard let index = idArray.index(of:"NSRemote") as? Int else {return}
         if let override = self.loopManager.settings.scheduleOverride, override.isActive() {
             //find which preset is active and see if its NSRemote
             if override.context == .preMeal || override.context == .custom {return}
             let raw = override.context.rawValue
             let rawpreset = raw["preset"] as! [String:Any]
             let name = rawpreset["name"] as! String
+            //if a diffrent local preset is running don't change
             if name != "NSRemote" {return}
         }
-     //   && override.context != .preset(TemporaryScheduleOverridePreset) {return}
 
-//        if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.workout)  == true || self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.preMeal)  == true {return}
         let nightscoutService = remoteDataManager.nightscoutService
         guard let nssite = nightscoutService.siteURL?.absoluteString  else {return}
         let formatter = ISO8601DateFormatter()
@@ -315,6 +318,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringCacheData
         session.dataTask(with: request as URLRequest) { (data, response, error) in
             if error != nil {
+                
                 return
             }
             guard let data = data else { return }
@@ -330,26 +334,20 @@ extension DeviceDataManager: PumpManagerDelegate {
                 }
                 let last = temptargets[cdates.index(of:cdates.max()!) as! Int]
                 //if duration is 0 we dont care about minmax levels, if not we need them to exist as Double
+                
+                //cancel any prior remoteTemp if last duration = 0 and remote temp is active else return anyway
+                if last.duration < 1 {
+                    if let override = self.loopManager.settings.scheduleOverride, override.isActive() {self.loopManager.settings.clearOverride()}
+                    //todo add notifications re remote cancel
+                    return
+                }
+                
                 //NS doesnt check to see if a duration is created but no targets exist - so we have too
                 if last.duration != 0 {
                     guard last.targetBottom != nil else {return}
                     guard last.targetTop != nil else {return}
                 }
-                //if user didnt set a multiplier but is setting targets then multiplier must be 1
-                
-                
-                //cancel any prior remoteTemp if last duration = 0 and remote temp is active else return anyway
-                if last.duration < 1 {
-                    if let override = self.loopManager.settings.scheduleOverride, override.isActive() {self.loopManager.settings.clearOverride()}
-                    
-                    //todo add notifications re remote cancel
-                    
-//                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == true  {
-//                        self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
-//                        NotificationManager.remoteTempSetNotification(duration:last.duration, lowTarget: 0.0, highTarget: 0.0)
-//                    }
-                    return
-                }
+
                 // set the remote temp if it's valid and not already set.  Handle the nil issue as well
                 let endlastTemp = cdates.max()! + TimeInterval(.minutes(Double(last.duration)))
                 if Date() < endlastTemp  {
@@ -357,42 +355,25 @@ extension DeviceDataManager: PumpManagerDelegate {
                     let userUnit = self.loopManager.settings.glucoseTargetRangeSchedule?.unit
                     //convert NS temp targets to an HKQuanity with units and set limits (low of 70 mg/dL, high of 300 mg/dL)
                     //ns temps are always given in mg/dL
+                    
                     let lowerTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:max(50.0,last.targetBottom as! Double))
                     let upperTarget : HKQuantity = HKQuantity(unit : NStargetUnit, doubleValue:min(400.0,last.targetTop as! Double))
                     //set the temp if override isn't enabled or is nil ie never enabled
-                    
-                    //find which preset NSRemote is - do it each loop since it may change
-                    var presets = self.loopManager.settings.overridePresets
-                    
-                    //if unwraps as nil set it to 1.0 - user only setting glucose range
-                    var multiplier = Double(last.notes) ?? 100.0
-                    
+                   //if unwraps as nil set it to 1.0 - user only setting glucose range
+                    var multiplier : Double = 100.0
+                    if last.notes != nil {multiplier = Double(last.notes as! String) ?? 100.0}
+                //    if var multiplier = Double(last.notes as! String) else {multiplier = 100.0}
                     multiplier = multiplier / 100.0
-                    
                     //safety settings
                     if multiplier < 0.0 || multiplier > 3.0 {
                         multiplier = 1.0
-                        
-                        //todo - send notification
                     }
-                    var idArray = [String]()
-                    for preset in presets {
-                        idArray.append(preset.name)
-                    }
-                    
-                    //trap error - if NSRemote doesnt exist then return
-                    //todo move this sooner
-                    guard let index = idArray.index(of:"NSRemote") as? Int else {return}
-                    
-              //      if let override = self.loopManager.settings.scheduleOverride, override.isActive() != true {
                     if self.loopManager.settings.scheduleOverride == nil || self.loopManager.settings.scheduleOverride?.isActive() != true {
                         presets[index].settings.basalRateMultiplier = multiplier
                         presets[index].settings.carbRatioMultiplier = multiplier
                         presets[index].settings.insulinSensitivityMultiplier = multiplier
                         presets[index].duration = .finite(.minutes(Double(last.duration)))
                         presets[index].settings.targetRange = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-                        
-                        
                         self.loopManager.settings.overridePresets = presets
                         let enactOverride = presets[index].createOverride(beginningAt: cdates.max()!)
                         self.loopManager.settings.scheduleOverride = enactOverride
@@ -402,7 +383,7 @@ extension DeviceDataManager: PumpManagerDelegate {
  // check to see if the last remote temp treatment is different from the current and if it is, then set it
 
                     let currentRange = presets[index].settings.targetRange
-                    let duration = presets[index].duration.timeInterval
+                    let duration = presets[index].duration.timeInterval ?? 1.0 as TimeInterval
                     let override = self.loopManager.settings.scheduleOverride
                     let startDate = override?.startDate
                     let activeDate = startDate! + duration
@@ -412,51 +393,20 @@ extension DeviceDataManager: PumpManagerDelegate {
                     self.doubleIsEqual((currentRange.minValue), lowerTarget.doubleValue(for: userUnit!), 1.0) == false ||
                     abs(activeDate.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(2)) {
                     
-                    
                     presets[index].settings.basalRateMultiplier = multiplier
                     presets[index].settings.carbRatioMultiplier = multiplier
                     presets[index].settings.insulinSensitivityMultiplier = multiplier
                     presets[index].duration = .finite(.minutes(Double(last.duration)))
                     presets[index].settings.targetRange = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-                    
-                    
                     self.loopManager.settings.overridePresets = presets
                     let enactOverride = presets[index].createOverride(beginningAt: cdates.max()!)
                     self.loopManager.settings.scheduleOverride = enactOverride
                     return
                     }
-//                    self.doubleIsEqual(<#T##a: Double##Double#>, <#T##b: Double##Double#>, <#T##precision: Double##Double#>)
-       
-//                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) != true {
-//                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
-//                        return
-//                    }
-         ///           let currentRange = self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget]!
-         ///           let activeDates = self.loopManager.settings.glucoseTargetRangeSchedule!.override?.activeDates
-                    ///this handles the case if a remote temp was canceled by a different temp, but the app restarts in between
-//                    if currentRange == nil || activeDates == nil {
-//                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
-//                        return
-//                    }
-                    //if anything has changed - ranges or duration, reset the temp
-//                    if  self.doubleIsEqual((currentRange?.minValue)!, lowerTarget.doubleValue(for: userUnit!), 0.01) == false || self.doubleIsEqual((currentRange?.maxValue)!, upperTarget.doubleValue(for: userUnit!), 0.01) == false || abs(activeDates!.end.timeIntervalSince(endlastTemp)) > TimeInterval(.minutes(1)) {
-//                        
-//                        self.setRemoteTemp(lowerTarget: lowerTarget, upperTarget: upperTarget, userUnit: userUnit!, endlastTemp: endlastTemp, duration: last.duration)
-//                        return
-//                        
-//                    }
-//                    else
-//                    {
-//                        //print(" temp already running no changes")
-//                    }
-                    
-                    
+
                 }
                 else {
-                    //last temp has expired - do a hard cancel to fix the UI- it should cancel itself but it doesnt
-//                    if self.loopManager.settings.glucoseTargetRangeSchedule?.overrideEnabledForContext(.remoteTempTarget) == true {
-//                        self.loopManager.settings.glucoseTargetRangeSchedule?.clearOverride(matching: .remoteTempTarget)
-//                    }
+                    //do nothing
                 }
             } catch let jsonError {
                 print("error in nstemp")
@@ -467,25 +417,7 @@ extension DeviceDataManager: PumpManagerDelegate {
             }.resume()
     }
     
-//    func setRemoteTemp (presets: [TemporaryScheduleOverridePreset],  lowerTarget: HKQuantity, upperTarget: HKQuantity, userUnit:HKUnit, endlastTemp: Date, duration: Int, multiplier: Double) {
 //
-//        presets[index].settings.basalRateMultiplier = multiplier
-//        presets[index].settings.carbRatioMultiplier = multiplier
-//        presets[index].settings.insulinSensitivityMultiplier = multiplier
-//        presets[index].duration = .finite(.minutes(Double(last.duration)))
-//        presets[index].settings.targetRange = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit!), maxValue: upperTarget.doubleValue(for: userUnit!))
-//
-//
-//        self.loopManager.settings.overridePresets = presets
-//        let enactOverride = presets[index].createOverride()
-//        self.loopManager.settings.scheduleOverride = enactOverride
-//        self.loopManager.settings.glucoseTargetRangeSchedule?.overrideRanges[.remoteTempTarget] = DoubleRange(minValue: lowerTarget.doubleValue(for: userUnit), maxValue: upperTarget.doubleValue(for: userUnit))
-//        let remoteTempSet = self.loopManager.settings.glucoseTargetRangeSchedule?.setOverride(.remoteTempTarget, until:endlastTemp)
-//        if remoteTempSet! {
-//            NotificationManager.remoteTempSetNotification(duration:duration , lowTarget: lowerTarget.doubleValue(for: userUnit), highTarget:upperTarget.doubleValue(for: userUnit))
-//        }
- //   }
-    
     //////////////////////////
 
     

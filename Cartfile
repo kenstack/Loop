@@ -3,5 +3,5 @@ github "t1dloop/CGMBLEKit" "omni-overrides-holly"
 github "i-schuetz/SwiftCharts" == 0.6.5
 github "t1dloop/dexcom-share-client-swift" "omni-overrides-holly"
 github "t1dloop/G4ShareSpy" "omni-overrides-holly"
-github "t1dloop/rileylink_ios" "omni-overrides-holly"
+github "kenstack/rileylink_ios" "nsuploader"
 github "LoopKit/Amplitude-iOS" "decreepify"

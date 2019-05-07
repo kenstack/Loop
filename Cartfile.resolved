@@ -1,6 +1,6 @@
 github "LoopKit/Amplitude-iOS" "2137d5fd44bf630ed33e1e72d7af6d8f8612f270"
 github "i-schuetz/SwiftCharts" "0.6.5"
-github "kenstack/rileylink_ios" "c51a46f6276b66dcc1ed62209a5454fcf69e815a"
+github "kenstack/rileylink_ios" "cd22289ea316b41d72aa112912f9fc031410d40c"
 github "maxkonovalov/MKRingProgressView" "2.2.2"
 github "t1dloop/CGMBLEKit" "43d7d661df2fc61e7ca7a1243aa98e03c8527b7f"
 github "t1dloop/G4ShareSpy" "05ce5e4ed586d3171bb58ff874c64409e3736b37"

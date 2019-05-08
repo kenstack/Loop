@@ -248,7 +248,8 @@ final class NightscoutDataManager {
             }
             else
             {
-                duration = endDate.timeIntervalSince(Date())
+                duration = round(endDate.timeIntervalSince(Date()))
+                
             }
             let name : String?
             

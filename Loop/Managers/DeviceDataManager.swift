@@ -12,6 +12,7 @@ import LoopKitUI
 import LoopCore
 import LoopTestingKit
 import UserNotifications
+import AudioToolbox
 
 final class DeviceDataManager {
 
@@ -36,6 +37,10 @@ final class DeviceDataManager {
         }
     }
     
+   
+    
+   
+    
     var pumpManagerHUDProvider: HUDProvider?
 
     let logger = DiagnosticLogger.shared
@@ -44,6 +49,11 @@ final class DeviceDataManager {
 
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
+    
+    /// set initial lastAlarmDate to launchDate
+    
+    var lastAlarmDate = Date() - .hours(24)
+    
 
     /// Manages authentication for remote services
     let remoteDataManager = RemoteDataManager()
@@ -117,7 +127,7 @@ final class DeviceDataManager {
 
     private func setupPump() {
         pumpManager?.pumpManagerDelegate = self
-        
+        self.checkAlarms()
         if let pumpManager = pumpManager {
             self.pumpManagerStatus = pumpManager.status
             self.loopManager.doseStore.device = self.pumpManagerStatus?.device
@@ -504,7 +514,33 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
     
     
-    
+    func checkAlarms() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+//        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+//        sleep(1)
+//        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+//        sleep(1)
+        let deltaAlarmTime = Date().timeIntervalSince(lastAlarmDate)
+        let bgLowThreshold : Double = 60.0
+        let snoozeMinutes : Double = 30.0
+        print("*************************")
+        print(deltaAlarmTime)
+        let lastestGlucose = loopManager.glucoseStore.latestGlucose
+        if let lastBGValue = lastestGlucose?.quantity.doubleValue(for: HKUnit.milligramsPerDeciliter) {
+            print("last BG IS")
+            print(lastBGValue)
+            if lastBGValue < bgLowThreshold && deltaAlarmTime > .minutes(snoozeMinutes){
+                print("**************")
+                print("ALARM")
+                AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+                lastAlarmDate = Date()
+            }
+        }
+        
+        print("*************************")
+        
+    }
     
     //
     //////////////////////////
@@ -555,6 +591,9 @@ extension DeviceDataManager: PumpManagerDelegate {
         let allowremoteTempTargets : Bool = true
         if allowremoteTempTargets == true {self.setNStemp()}
         /////
+        ///// add alarms
+        self.checkAlarms()
+        ///////
 
         loopManager.loop()
     }

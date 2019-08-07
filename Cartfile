@@ -1,5 +1,5 @@
 github "kdisimone/LoopKit" "negiobreduce"
-github "kdisimone/CGMBLEKit" "negiobreduce"
+github "kdisimone/CGMBLEKit" "negiobreduce-firefly"
 github "i-schuetz/SwiftCharts" == 0.6.5
 github "kdisimone/dexcom-share-client-swift" "negiobreduce"
 github "kdisimone/G4ShareSpy" "negiobreduce"

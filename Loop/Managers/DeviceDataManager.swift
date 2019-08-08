@@ -13,6 +13,9 @@ import LoopCore
 import LoopTestingKit
 import UserNotifications
 import AudioToolbox
+import AVFoundation
+
+
 
 final class DeviceDataManager {
 
@@ -127,7 +130,7 @@ final class DeviceDataManager {
 
     private func setupPump() {
         pumpManager?.pumpManagerDelegate = self
-        self.checkAlarms()
+        // for test self.checkAlarms()
         if let pumpManager = pumpManager {
             self.pumpManagerStatus = pumpManager.status
             self.loopManager.doseStore.device = self.pumpManagerStatus?.device
@@ -294,6 +297,8 @@ extension DeviceDataManager: PumpManagerDelegate {
                 // TODO: Isolate to queue?
                 self.cgmManager(manager, didUpdateWith: result)
             }
+        //call after cgm was read
+        self.checkAlarms()
         }
     }
 
@@ -454,6 +459,8 @@ extension DeviceDataManager: PumpManagerDelegate {
                         multiplier = 1.0
                     }
                     
+                    multiplier = max(0.1, multiplier)
+                    
                     
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZ"
@@ -514,32 +521,43 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
     
     
+  func vibrate() {
+    DispatchQueue.main.async {
+        var i = 0
+        while i < 25 {
+            AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+            sleep(1)
+            i+=1
+        }
+    }
+    }
+   
     func checkAlarms() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
-//        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
-//        sleep(1)
-//        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
-//        sleep(1)
         let deltaAlarmTime = Date().timeIntervalSince(lastAlarmDate)
-        let bgLowThreshold : Double = 60.0
+        let bgLowThreshold : Double = 60.0 //in mg/dL
         let snoozeMinutes : Double = 30.0
-        print("*************************")
-        print(deltaAlarmTime)
         let lastestGlucose = loopManager.glucoseStore.latestGlucose
+        //TODO add logic for what happens if no lastBG exists
+        //TODO what to do with old data
+        
+        
+        
         if let lastBGValue = lastestGlucose?.quantity.doubleValue(for: HKUnit.milligramsPerDeciliter) {
-            print("last BG IS")
-            print(lastBGValue)
             if lastBGValue < bgLowThreshold && deltaAlarmTime > .minutes(snoozeMinutes){
                 print("**************")
                 print("ALARM")
-                AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
                 lastAlarmDate = Date()
+                vibrate()
+            }
+            else
+            {
+                print("***NO LOW THRESHOLD ALARM***")
             }
         }
-        
-        print("*************************")
-        
+        else
+        {
+            print("---------------------------NO BG")
+        }
     }
     
     //
@@ -592,7 +610,7 @@ extension DeviceDataManager: PumpManagerDelegate {
         if allowremoteTempTargets == true {self.setNStemp()}
         /////
         ///// add alarms
-        self.checkAlarms()
+      //  self.checkAlarms()
         ///////
 
         loopManager.loop()

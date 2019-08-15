@@ -1,7 +1,7 @@
-github "kdisimone/LoopKit" "negiobreduce"
-github "kdisimone/CGMBLEKit" "negiobreduce-firefly"
+github "t1dloop/LoopKit" "negiobreduce"
+github "t1dloop/CGMBLEKit" "negiobreduce-firefly"
 github "i-schuetz/SwiftCharts" == 0.6.5
-github "kdisimone/dexcom-share-client-swift" "negiobreduce"
-github "kdisimone/G4ShareSpy" "negiobreduce"
-github "kdisimone/rileylink_ios" "negiobreduce"
+github "t1dloop/dexcom-share-client-swift" "negiobreduce"
+github "t1dloop/G4ShareSpy" "negiobreduce"
+github "t1dloop/rileylink_ios" "negiobreduce"
 github "LoopKit/Amplitude-iOS" "decreepify"

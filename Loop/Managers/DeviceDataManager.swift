@@ -53,7 +53,7 @@ final class DeviceDataManager {
     /// Remember the launch date of the app for diagnostic reporting
     private let launchDate = Date()
     
-    /// set initial lastAlarmDate to launchDate
+    /// set initial lastAlarmDate to launchDate minus 24 hours
     
     var lastAlarmDate = Date() - .hours(24)
     
@@ -130,7 +130,8 @@ final class DeviceDataManager {
 
     private func setupPump() {
         pumpManager?.pumpManagerDelegate = self
-        // for test self.checkAlarms()
+        // for test
+        //self.checkAlarms()
         if let pumpManager = pumpManager {
             self.pumpManagerStatus = pumpManager.status
             self.loopManager.doseStore.device = self.pumpManagerStatus?.device
@@ -533,31 +534,39 @@ extension DeviceDataManager: PumpManagerDelegate {
     }
    
     func checkAlarms() {
-        let deltaAlarmTime = Date().timeIntervalSince(lastAlarmDate)
+ 
         let bgLowThreshold : Double = 60.0 //in mg/dL
         let snoozeMinutes : Double = 30.0
+        let oldBGLimit : Double = 45.0 //in minutes
         let lastestGlucose = loopManager.glucoseStore.latestGlucose
+        let deltaAlarmTime = Date().timeIntervalSince(lastAlarmDate)
         //TODO add logic for what happens if no lastBG exists
-        //TODO what to do with old data
+        if deltaAlarmTime < snoozeMinutes {
+            print("****Vibration Snooze****")
+            return
+        }
         
-        
-        
-        if let lastBGValue = lastestGlucose?.quantity.doubleValue(for: HKUnit.milligramsPerDeciliter) {
-            if lastBGValue < bgLowThreshold && deltaAlarmTime > .minutes(snoozeMinutes){
+        if let lastBGDate = lastestGlucose?.startDate {
+            let deltaBGDate = Date().timeIntervalSince(lastBGDate)
+            if deltaBGDate > .minutes(oldBGLimit) {
                 print("**************")
-                print("ALARM")
+                print("VIBRATION ALARM OLD BG DATA")
                 lastAlarmDate = Date()
                 vibrate()
-            }
-            else
-            {
-                print("***NO LOW THRESHOLD ALARM***")
+                return
             }
         }
-        else
-        {
-            print("---------------------------NO BG")
+        
+        if let lastBGValue = lastestGlucose?.quantity.doubleValue(for: HKUnit.milligramsPerDeciliter) {
+            if lastBGValue < bgLowThreshold {
+                print("**************")
+                print("VIBRATION ALARM LOW BG")
+                lastAlarmDate = Date()
+                vibrate()
+                return
+            }
         }
+    print("*****Finished Alarms*****")
     }
     
     //

@@ -518,7 +518,9 @@ extension Collection where Element: GlucoseValue {
         guard let correction = self.insulinCorrection(
             to: correctionRange,
             at: date,
-            suspendThreshold: suspendThreshold ?? correctionRange.quantityRange(at: date).lowerBound,
+            //suspendThreshold: suspendThreshold ?? correctionRange.quantityRange(at: date).lowerBound,
+            //fix suspenpend threshold so that shorter duration carbs do not get underbolused
+            suspendThreshold: HKQuantity(unit: HKUnit.milligramsPerDeciliter, doubleValue: 55.0),
             sensitivity: sensitivity.quantity(at: date),
             model: model
         ) else {
